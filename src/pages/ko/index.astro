@@ -31,6 +31,14 @@ const l = i18n.landing;
 
     <!-- Converter Tool -->
     <section id="converter">
+      <!-- Skeleton: visible until React hydrates -->
+      <div id="converter-skeleton" class="converter-skeleton">
+        <div class="converter-skeleton-inner">
+          <div class="converter-skeleton-icon"></div>
+          <div class="converter-skeleton-bar"></div>
+          <div class="converter-skeleton-bar short"></div>
+        </div>
+      </div>
       <ColoringConverter client:load t={i18n.converter} locale="ko" />
     </section>
 

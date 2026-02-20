@@ -39,6 +39,25 @@ const structuredData = {
     <meta name="naver-site-verification" content="edb3efc31035cbfe5e824585be1cd9a5aebacfac" />
     <title>{title}</title>
 
+    <!-- Critical CSS: prevent white flash -->
+    <style is:inline>
+      html{background:#FFF9F0}
+      body{margin:0;min-height:100vh;background:#FFF9F0;color:#3D3530;font-family:'Noto Sans KR',system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+      .splash{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#FFF9F0;transition:opacity .3s ease}
+      .splash.hide{opacity:0;pointer-events:none}
+      .splash-logo{font-family:Nunito,'Noto Sans KR',sans-serif;font-size:1.75rem;font-weight:800;color:#3D3530}
+      .splash-dot{display:flex;gap:6px;margin-top:16px}
+      .splash-dot span{width:8px;height:8px;border-radius:50%;background:#FF6B4A;animation:bounce .6s infinite alternate}
+      .splash-dot span:nth-child(2){animation-delay:.15s}
+      .splash-dot span:nth-child(3){animation-delay:.3s}
+      @keyframes bounce{to{opacity:.3;transform:translateY(-6px)}}
+      .converter-skeleton{max-width:672px;margin:0 auto;padding:0 16px}
+      .converter-skeleton-inner{border:2px dashed #D4C8BE;border-radius:16px;background:#fff;padding:48px 16px;text-align:center}
+      .converter-skeleton-icon{width:48px;height:48px;margin:0 auto;border-radius:50%;background:#FFF0E5}
+      .converter-skeleton-bar{height:14px;border-radius:7px;background:#F0EAE3;margin:16px auto 0;width:60%}
+      .converter-skeleton-bar.short{width:40%;margin-top:8px}
+    </style>
+
     <link rel="canonical" href={canonicalUrl} />
     <link rel="alternate" hreflang={locale} href={canonicalUrl} />
     <link
@@ -68,26 +87,56 @@ const structuredData = {
       set:html={JSON.stringify(structuredData)}
     />
 
-    <!-- Kakao SDK -->
-    <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js" crossorigin="anonymous"></script>
-    <script is:inline>
-      if (typeof Kakao !== "undefined" && !Kakao.isInitialized()) {
-        Kakao.init("cc0642129bab260c8791d9de19ca5e46");
-      }
-    </script>
-
-    <!-- Fonts -->
+    <!-- Fonts: preconnect + non-blocking load -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
+      rel="preload"
+      as="style"
       href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700&family=Nunito:wght@400;600;700;800&display=swap"
-      rel="stylesheet"
+      onload="this.onload=null;this.rel='stylesheet'"
     />
+    <noscript>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700&family=Nunito:wght@400;600;700;800&display=swap"
+        rel="stylesheet"
+      />
+    </noscript>
+
+    <!-- Kakao SDK (async, non-blocking) -->
+    <script is:inline>
+      (function(){
+        var s=document.createElement('script');
+        s.src='https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js';
+        s.async=true;
+        s.crossOrigin='anonymous';
+        s.onload=function(){if(typeof Kakao!=='undefined'&&!Kakao.isInitialized())Kakao.init('cc0642129bab260c8791d9de19ca5e46')};
+        document.head.appendChild(s);
+      })();
+    </script>
   </head>
   <body
     class="min-h-screen bg-[#FFF9F0] text-[#3D3530] font-sans antialiased"
   >
+    <!-- Splash screen: visible instantly, hides when page is ready -->
+    <div class="splash" id="splash">
+      <div class="splash-logo">OurColoring</div>
+      <div class="splash-dot"><span></span><span></span><span></span></div>
+    </div>
+
     <slot />
+
+    <script is:inline>
+      // Hide splash as soon as main content is painted
+      (function(){
+        function hide(){
+          var s=document.getElementById('splash');
+          if(s){s.classList.add('hide');setTimeout(function(){s.remove()},300)}
+        }
+        if(document.readyState==='complete')hide();
+        else window.addEventListener('load',hide);
+      })();
+    </script>
 
     <!-- Cookie Consent Banner -->
     <div

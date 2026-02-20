@@ -89,9 +89,10 @@ export default function ColoringConverter({ t, locale }: Props) {
   const pendingFileRef = useRef<File | null>(null);
   const debounceRef = useRef<number>(0);
 
-  // Initialize limit on mount
+  // Initialize limit on mount & remove skeleton
   useEffect(() => {
     setLimit(getRemainingCount());
+    document.getElementById("converter-skeleton")?.remove();
   }, []);
 
   // ── File validation ────────────────────────────────────
