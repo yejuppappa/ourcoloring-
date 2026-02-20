@@ -1,0 +1,103 @@
+export default {
+  meta: {
+    title: "OurColoring — 사진으로 색칠공부 도안 만들기",
+    description:
+      "내 아이 사진, 가족 사진, 우리집 반려동물까지! 사진 한 장으로 색칠공부 도안을 만들어보세요. 무료, 서버 저장 없음.",
+  },
+  nav: {
+    home: "홈",
+    howToPrint: "프린트 방법",
+    about: "소개",
+  },
+  hero: {
+    title: "사진 한 장으로\n우리 아이 색칠공부 만들기",
+    subtitle:
+      "내 아이 사진, 반려동물, 장난감 — 무엇이든 색칠공부 도안으로 변환하세요.",
+  },
+  converter: {
+    uploadTitle: "사진을 올려보세요",
+    uploadSubtitle: "드래그앤드롭 또는 클릭하여 사진 선택",
+    uploadFormats: "JPEG, PNG, WebP · 최대 10MB",
+    errorFormat: "지원하지 않는 파일 형식입니다. JPEG, PNG, WebP만 지원합니다.",
+    errorSize: "파일 크기가 10MB를 초과합니다.",
+    errorGeneric: "이미지를 처리할 수 없습니다. 다른 사진으로 시도해주세요.",
+    processing: "색칠공부 도안으로 변환 중...",
+    sensitivity: "감도",
+    thickness: "선 굵기",
+    viewOriginal: "원본",
+    viewResult: "결과",
+    tryAnother: "다른 사진으로 시도",
+    privacy: "사진은 서버에 저장되지 않습니다",
+    downloadPng: "PNG 다운로드",
+    downloadPdf: "PDF 다운로드 (A4)",
+    downloadPreparing: "준비 중...",
+    limitCounter: "오늘 남은 변환",
+    limitUnlimited: "무제한",
+    limitTitle: "오늘의 무료 변환을 모두 사용했어요",
+    limitSubtitle:
+      "이메일을 남기면 정식 런칭 전까지 무제한으로 이용할 수 있어요!",
+    limitEmailPlaceholder: "이메일 주소",
+    limitSubmit: "무제한 이용하기",
+    limitInvalidEmail: "올바른 이메일 형식을 입력해주세요.",
+    shareKakao: "카카오톡 공유",
+    shareCopyLink: "링크 복사",
+    shareCopied: "복사되었습니다!",
+  },
+  landing: {
+    howTitle: "이렇게 쉬워요",
+    step1Title: "사진 올리기",
+    step1Desc: "아이 사진, 반려동물, 장난감 — 무엇이든 OK",
+    step2Title: "자동 변환",
+    step2Desc: "탭 한 번으로 색칠공부 도안이 완성돼요",
+    step3Title: "프린트 & 색칠",
+    step3Desc: "A4에 프린트해서 바로 색칠 시작!",
+    trustPrivacy: "사진 서버 저장 없음",
+    trustFast: "3초 만에 변환",
+    trustFree: "완전 무료",
+    trustMobile: "모바일 최적화",
+    seoTitle: "사진으로 색칠공부 도안 만들기",
+    seoContent:
+      "사진 색칠공부, 색칠도안, 색칠하기, 색칠놀이 — 어떤 사진이든 깨끗한 선화로 변환됩니다. 우리 아이 사진, 가족 사진, 반려동물 사진을 색칠공부 도안으로 바꿔보세요. 프린트해서 아이와 함께 즐기는 색칠놀이! 로그인 없이, 앱 설치 없이, 무료로 사용하세요.",
+    ctaTitle: "지금 바로 시작해보세요",
+    ctaButton: "위로 올라가서 사진 올리기",
+  },
+  printGuide: {
+    meta: {
+      title: "프린트 가이드 — 색칠공부 도안 프린트하는 법 | OurColoring",
+      description:
+        "변환된 색칠공부 도안을 집에서 와이파이 프린터로, 또는 편의점에서 프린트하는 방법을 안내합니다.",
+    },
+    title: "프린트 가이드",
+    subtitle: "변환된 색칠공부 도안을 프린트하는 방법",
+    wifiTitle: "집에서 프린트하기",
+    wifiSteps: [
+      "OurColoring에서 도안을 PNG 또는 PDF로 다운로드하세요.",
+      "핸드폰과 프린터가 같은 와이파이에 연결되어 있는지 확인하세요.",
+      "다운로드한 파일을 열고 공유 또는 프린트 버튼을 누르세요.",
+      "용지 크기를 A4로 설정하고, 흑백 프린트를 선택하면 비용을 절약할 수 있어요.",
+    ],
+    convTitle: "편의점에서 프린트하기",
+    convSteps: [
+      "PDF로 다운로드하세요 (A4 최적화 포맷).",
+      "편의점 프린트 앱을 설치하세요 (CU, GS25, 세븐일레븐 등).",
+      "앱에 PDF 파일을 업로드하고 가까운 편의점을 선택하세요.",
+      "편의점 복합기에서 인쇄 코드를 입력하고 프린트하세요.",
+    ],
+    tipsTitle: "프린트 팁",
+    tips: [
+      "A4 용지를 사용하세요 — PDF가 A4에 맞게 최적화되어 있어요.",
+      "흑백 프린트를 추천해요 — 색칠공부에 딱 맞고, 잉크도 절약돼요.",
+      "두꺼운 용지(도화지)를 쓰면 색연필이나 크레파스로 색칠할 때 더 좋아요.",
+      "같은 도안을 여러 장 프린트해서 친구들과 함께 색칠하세요!",
+    ],
+  },
+  cookie: {
+    message: "이 사이트는 서비스 개선을 위해 쿠키를 사용합니다.",
+    accept: "동의",
+    decline: "거부",
+  },
+  footer: {
+    copyright: "© 2026 OurColoring. All rights reserved.",
+    printGuide: "프린트 가이드",
+  },
+} as const;

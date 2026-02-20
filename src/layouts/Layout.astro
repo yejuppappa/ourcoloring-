@@ -1,0 +1,187 @@
+---
+import "@/styles/global.css";
+import { getLocaleFromUrl, t } from "@/i18n";
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const locale = getLocaleFromUrl(Astro.url);
+const i18n = t(locale);
+const { title = i18n.meta.title, description = i18n.meta.description } =
+  Astro.props;
+
+const altLocale = locale === "ko" ? "en" : "ko";
+const altPath = Astro.url.pathname.replace(`/${locale}`, `/${altLocale}`);
+const canonicalUrl = Astro.url.href;
+const siteUrl = Astro.site?.origin ?? "https://ourcoloring.com";
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "OurColoring",
+  url: siteUrl,
+  description: i18n.meta.description,
+  applicationCategory: "MultimediaApplication",
+  operatingSystem: "Web",
+  inLanguage: [locale],
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+};
+---
+
+<!doctype html>
+<html lang={locale}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <meta name="naver-site-verification" content="edb3efc31035cbfe5e824585be1cd9a5aebacfac" />
+    <title>{title}</title>
+
+    <link rel="canonical" href={canonicalUrl} />
+    <link rel="alternate" hreflang={locale} href={canonicalUrl} />
+    <link
+      rel="alternate"
+      hreflang={altLocale}
+      href={new URL(altPath, Astro.site).href}
+    />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={`${siteUrl}/og-image.jpg`} />
+    <meta property="og:site_name" content="OurColoring" />
+    <meta property="og:locale" content={locale === "ko" ? "ko_KR" : "en_US"} />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={`${siteUrl}/og-image.jpg`} />
+
+    <!-- Structured Data -->
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify(structuredData)}
+    />
+
+    <!-- Kakao SDK -->
+    <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js" crossorigin="anonymous"></script>
+    <script is:inline>
+      if (typeof Kakao !== "undefined" && !Kakao.isInitialized()) {
+        Kakao.init("cc0642129bab260c8791d9de19ca5e46");
+      }
+    </script>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700&family=Nunito:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body
+    class="min-h-screen bg-[#FFF9F0] text-[#3D3530] font-sans antialiased"
+  >
+    <slot />
+
+    <!-- Cookie Consent Banner -->
+    <div
+      id="cookie-banner"
+      class="fixed bottom-0 left-0 right-0 z-50 hidden border-t border-[#E8DFD6] bg-white/95 px-4 py-3 shadow-lg backdrop-blur-sm"
+    >
+      <div
+        class="mx-auto flex max-w-2xl flex-col items-center gap-3 sm:flex-row sm:justify-between"
+      >
+        <p class="text-sm text-[#7A7067]">{i18n.cookie.message}</p>
+        <div class="flex gap-2">
+          <button
+            id="cookie-accept"
+            class="rounded-lg bg-[#FF6B4A] px-4 py-1.5 text-sm font-medium text-white"
+          >
+            {i18n.cookie.accept}
+          </button>
+          <button
+            id="cookie-decline"
+            class="rounded-lg border border-[#D4C8BE] px-4 py-1.5 text-sm text-[#7A7067]"
+          >
+            {i18n.cookie.decline}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Analytics loader (inline, no external dependency) -->
+    <script is:inline>
+      (function () {
+        var CK = "ourcoloring_cookie_consent";
+        var consent = localStorage.getItem(CK);
+
+        function loadAnalytics() {
+          // GA4
+          var GA_ID = "G-2RNZCY0YPM";
+          if (GA_ID) {
+            var gs = document.createElement("script");
+            gs.src =
+              "https://www.googletagmanager.com/gtag/js?id=" + GA_ID;
+            gs.async = true;
+            document.head.appendChild(gs);
+            window.dataLayer = window.dataLayer || [];
+            window.gtag = function () {
+              dataLayer.push(arguments);
+            };
+            window.gtag("js", new Date());
+            window.gtag("config", GA_ID);
+          }
+
+          // Microsoft Clarity
+          var CLARITY_ID = "vkdvv8w5sd";
+          if (CLARITY_ID) {
+            (function (c, l, a, r, i, t, y) {
+              c[a] =
+                c[a] ||
+                function () {
+                  (c[a].q = c[a].q || []).push(arguments);
+                };
+              t = l.createElement(r);
+              t.async = 1;
+              t.src = "https://www.clarity.ms/tag/" + i;
+              y = l.getElementsByTagName(r)[0];
+              y.parentNode.insertBefore(t, y);
+            })(window, document, "clarity", "script", CLARITY_ID);
+          }
+        }
+
+        // Auto-load if already consented
+        if (consent === "accepted") {
+          loadAnalytics();
+        }
+
+        // Show banner if no decision yet
+        var banner = document.getElementById("cookie-banner");
+        if (!consent && banner) {
+          banner.classList.remove("hidden");
+        }
+
+        document
+          .getElementById("cookie-accept")
+          ?.addEventListener("click", function () {
+            localStorage.setItem(CK, "accepted");
+            loadAnalytics();
+            banner?.classList.add("hidden");
+          });
+
+        document
+          .getElementById("cookie-decline")
+          ?.addEventListener("click", function () {
+            localStorage.setItem(CK, "declined");
+            banner?.classList.add("hidden");
+          });
+      })();
+    </script>
+  </body>
+</html>

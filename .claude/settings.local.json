@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(npm run build:*)",
+      "Bash(timeout 10 npm run dev)",
+      "Bash(npx astro build)",
+      "Bash(node node_modules/.bin/astro:*)",
+      "Bash(timeout 8 npx astro dev:*)",
+      "Bash(node:*)",
+      "Bash(cmd.exe //c \"npx astro build\")",
+      "Bash(git init:*)",
+      "Bash(git branch:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}

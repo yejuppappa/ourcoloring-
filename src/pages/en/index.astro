@@ -1,0 +1,113 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import ColoringConverter from "@/components/ColoringConverter";
+import { t } from "@/i18n";
+
+const i18n = t("en");
+const l = i18n.landing;
+---
+
+<Layout>
+  <a
+    href="#converter"
+    class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-[#FF6B4A] focus:px-4 focus:py-2 focus:text-white"
+  >
+    Skip to converter
+  </a>
+
+  <main class="mx-auto max-w-2xl px-4">
+    <section class="pb-8 pt-12 text-center md:pt-16">
+      <h1
+        class="whitespace-pre-line font-['Nunito'] text-3xl font-extrabold leading-tight text-[#3D3530] md:text-4xl"
+      >
+        {i18n.hero.title}
+      </h1>
+      <p class="mt-3 text-base text-[#7A7067] md:text-lg">
+        {i18n.hero.subtitle}
+      </p>
+    </section>
+
+    <section id="converter">
+      <ColoringConverter client:load t={i18n.converter} locale="en" />
+    </section>
+
+    <section class="mt-16 text-center">
+      <h2 class="font-['Nunito'] text-2xl font-bold text-[#3D3530]">
+        {l.howTitle}
+      </h2>
+      <div class="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-3">
+        <div class="rounded-2xl bg-white p-6 shadow-sm border border-[#E8DFD6]">
+          <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#FFF0E5] text-2xl">📸</div>
+          <h3 class="mt-4 font-semibold text-[#3D3530]">{l.step1Title}</h3>
+          <p class="mt-1 text-sm text-[#7A7067]">{l.step1Desc}</p>
+        </div>
+        <div class="rounded-2xl bg-white p-6 shadow-sm border border-[#E8DFD6]">
+          <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#FFF0E5] text-2xl">✨</div>
+          <h3 class="mt-4 font-semibold text-[#3D3530]">{l.step2Title}</h3>
+          <p class="mt-1 text-sm text-[#7A7067]">{l.step2Desc}</p>
+        </div>
+        <div class="rounded-2xl bg-white p-6 shadow-sm border border-[#E8DFD6]">
+          <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#FFF0E5] text-2xl">🖨️</div>
+          <h3 class="mt-4 font-semibold text-[#3D3530]">{l.step3Title}</h3>
+          <p class="mt-1 text-sm text-[#7A7067]">{l.step3Desc}</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="mt-16">
+      <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <div class="flex flex-col items-center rounded-xl bg-white p-4 text-center shadow-sm border border-[#E8DFD6]">
+          <span class="text-2xl">🔒</span>
+          <p class="mt-2 text-xs font-medium text-[#3D3530]">{l.trustPrivacy}</p>
+        </div>
+        <div class="flex flex-col items-center rounded-xl bg-white p-4 text-center shadow-sm border border-[#E8DFD6]">
+          <span class="text-2xl">⚡</span>
+          <p class="mt-2 text-xs font-medium text-[#3D3530]">{l.trustFast}</p>
+        </div>
+        <div class="flex flex-col items-center rounded-xl bg-white p-4 text-center shadow-sm border border-[#E8DFD6]">
+          <span class="text-2xl">🆓</span>
+          <p class="mt-2 text-xs font-medium text-[#3D3530]">{l.trustFree}</p>
+        </div>
+        <div class="flex flex-col items-center rounded-xl bg-white p-4 text-center shadow-sm border border-[#E8DFD6]">
+          <span class="text-2xl">📱</span>
+          <p class="mt-2 text-xs font-medium text-[#3D3530]">{l.trustMobile}</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="mt-16 rounded-2xl bg-white p-6 shadow-sm border border-[#E8DFD6]">
+      <h2 class="font-['Nunito'] text-xl font-bold text-[#3D3530]">
+        {l.seoTitle}
+      </h2>
+      <p class="mt-3 text-sm leading-relaxed text-[#7A7067]">
+        {l.seoContent}
+      </p>
+    </section>
+
+    <section class="mt-16 pb-8 text-center">
+      <h2 class="font-['Nunito'] text-xl font-bold text-[#3D3530]">
+        {l.ctaTitle}
+      </h2>
+      <a
+        href="#converter"
+        class="mt-4 inline-block rounded-xl bg-[#FF6B4A] px-8 py-3 font-semibold text-white transition-transform hover:scale-105 active:scale-95"
+      >
+        {l.ctaButton}
+      </a>
+    </section>
+  </main>
+
+  <footer
+    class="mt-8 border-t border-[#E8DFD6] bg-white/50 py-6 text-center text-sm text-[#A09890]"
+  >
+    <div class="mx-auto flex max-w-2xl flex-col items-center gap-2 px-4">
+      <div class="flex gap-4">
+        <a href="/en/how-to-print/" class="underline hover:text-[#3D3530]">
+          {i18n.footer.printGuide}
+        </a>
+        <a href="/ko/" class="underline hover:text-[#3D3530]">한국어</a>
+      </div>
+      <p>{i18n.footer.copyright}</p>
+    </div>
+  </footer>
+</Layout>

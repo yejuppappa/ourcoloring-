@@ -1,0 +1,84 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import { t } from "@/i18n";
+
+const i18n = t("en");
+const p = i18n.printGuide;
+---
+
+<Layout title={p.meta.title} description={p.meta.description}>
+  <main class="mx-auto max-w-2xl px-4 py-12 md:py-16">
+    <a href="/en/" class="mb-6 inline-flex items-center gap-1 text-sm text-[#FF6B4A] hover:underline">
+      ← {i18n.nav.home}
+    </a>
+
+    <h1 class="font-['Nunito'] text-3xl font-extrabold text-[#3D3530]">{p.title}</h1>
+    <p class="mt-2 text-[#7A7067]">{p.subtitle}</p>
+
+    <section class="mt-10">
+      <h2 class="flex items-center gap-2 text-xl font-bold text-[#3D3530]">
+        <span class="flex h-8 w-8 items-center justify-center rounded-full bg-[#FFF0E5] text-base">📶</span>
+        {p.wifiTitle}
+      </h2>
+      <ol class="mt-4 space-y-3">
+        {p.wifiSteps.map((step: string, i: number) => (
+          <li class="flex gap-3 rounded-xl border border-[#E8DFD6] bg-white p-4">
+            <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#FF6B4A] text-xs font-bold text-white">
+              {i + 1}
+            </span>
+            <span class="text-sm text-[#3D3530]">{step}</span>
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <section class="mt-10">
+      <h2 class="flex items-center gap-2 text-xl font-bold text-[#3D3530]">
+        <span class="flex h-8 w-8 items-center justify-center rounded-full bg-[#FFF0E5] text-base">🏪</span>
+        {p.convTitle}
+      </h2>
+      <ol class="mt-4 space-y-3">
+        {p.convSteps.map((step: string, i: number) => (
+          <li class="flex gap-3 rounded-xl border border-[#E8DFD6] bg-white p-4">
+            <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#FF6B4A] text-xs font-bold text-white">
+              {i + 1}
+            </span>
+            <span class="text-sm text-[#3D3530]">{step}</span>
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <section class="mt-10">
+      <h2 class="flex items-center gap-2 text-xl font-bold text-[#3D3530]">
+        <span class="flex h-8 w-8 items-center justify-center rounded-full bg-[#FFF0E5] text-base">💡</span>
+        {p.tipsTitle}
+      </h2>
+      <ul class="mt-4 space-y-2">
+        {p.tips.map((tip: string) => (
+          <li class="flex gap-2 text-sm text-[#3D3530]">
+            <span class="shrink-0 text-[#FF6B4A]">•</span>
+            {tip}
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <div class="mt-12 text-center">
+      <a
+        href="/en/"
+        class="inline-block rounded-xl bg-[#FF6B4A] px-8 py-3 font-semibold text-white transition-transform hover:scale-105 active:scale-95"
+      >
+        Start making coloring pages
+      </a>
+    </div>
+  </main>
+
+  <footer class="border-t border-[#E8DFD6] bg-white/50 py-6 text-center text-sm text-[#A09890]">
+    <div class="flex justify-center gap-4">
+      <a href="/en/" class="underline hover:text-[#3D3530]">{i18n.nav.home}</a>
+      <a href="/ko/how-to-print/" class="underline hover:text-[#3D3530]">한국어</a>
+    </div>
+    <p class="mt-2">{i18n.footer.copyright}</p>
+  </footer>
+</Layout>

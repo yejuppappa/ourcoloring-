@@ -1,0 +1,104 @@
+export default {
+  meta: {
+    title: "OurColoring — Turn Photos into Coloring Pages",
+    description:
+      "Turn any photo into a printable coloring page — your kids, pets, toys, anything! Free, no server storage.",
+  },
+  nav: {
+    home: "Home",
+    howToPrint: "How to Print",
+    about: "About",
+  },
+  hero: {
+    title: "Turn Any Photo into\na Coloring Page",
+    subtitle:
+      "Your kids, pets, toys — anything can become a coloring page in seconds.",
+  },
+  converter: {
+    uploadTitle: "Upload a photo",
+    uploadSubtitle: "Drag & drop or click to select",
+    uploadFormats: "JPEG, PNG, WebP · Max 10MB",
+    errorFormat:
+      "Unsupported file format. Only JPEG, PNG, and WebP are supported.",
+    errorSize: "File size exceeds 10MB.",
+    errorGeneric: "Could not process this image. Please try another photo.",
+    processing: "Converting to coloring page...",
+    sensitivity: "Sensitivity",
+    thickness: "Line thickness",
+    viewOriginal: "Original",
+    viewResult: "Result",
+    tryAnother: "Try another photo",
+    privacy: "Photos are never stored on our servers",
+    downloadPng: "Download PNG",
+    downloadPdf: "Download PDF (A4)",
+    downloadPreparing: "Preparing...",
+    limitCounter: "Remaining today",
+    limitUnlimited: "Unlimited",
+    limitTitle: "You've used all free conversions for today",
+    limitSubtitle:
+      "Enter your email to get unlimited access until our official launch!",
+    limitEmailPlaceholder: "Email address",
+    limitSubmit: "Get unlimited access",
+    limitInvalidEmail: "Please enter a valid email address.",
+    shareKakao: "Share via KakaoTalk",
+    shareCopyLink: "Copy link",
+    shareCopied: "Copied!",
+  },
+  landing: {
+    howTitle: "It's this easy",
+    step1Title: "Upload a photo",
+    step1Desc: "Kids, pets, toys — anything works",
+    step2Title: "Auto convert",
+    step2Desc: "One tap to create a coloring page",
+    step3Title: "Print & color",
+    step3Desc: "Print on A4 and start coloring!",
+    trustPrivacy: "No server storage",
+    trustFast: "Convert in 3 seconds",
+    trustFree: "Completely free",
+    trustMobile: "Mobile optimized",
+    seoTitle: "Turn Photos into Coloring Pages",
+    seoContent:
+      "Turn any photo into a clean line drawing coloring page. Your kids' photos, family pictures, pet snapshots — all become printable coloring sheets. No login, no app install, completely free. Print on A4 paper and enjoy coloring time with your kids!",
+    ctaTitle: "Ready to try it?",
+    ctaButton: "Scroll up to upload a photo",
+  },
+  printGuide: {
+    meta: {
+      title: "Print Guide — How to Print Coloring Pages | OurColoring",
+      description:
+        "Learn how to print your converted coloring pages at home with a WiFi printer or at a local print shop.",
+    },
+    title: "Print Guide",
+    subtitle: "How to print your coloring pages",
+    wifiTitle: "Print at home",
+    wifiSteps: [
+      "Download your coloring page as PNG or PDF from OurColoring.",
+      "Make sure your phone and printer are connected to the same WiFi network.",
+      "Open the downloaded file and tap the Share or Print button.",
+      "Set paper size to A4 and choose black & white to save ink.",
+    ],
+    convTitle: "Print at a copy shop",
+    convSteps: [
+      "Download as PDF (optimized for A4 printing).",
+      "Transfer the PDF to a USB drive, or email it to yourself.",
+      "Visit a local copy shop or office supply store.",
+      "Ask for A4 black & white prints — it's the cheapest option!",
+    ],
+    tipsTitle: "Printing tips",
+    tips: [
+      "Use A4 paper — the PDF is optimized for A4 size.",
+      "Black & white printing is recommended — perfect for coloring and saves ink.",
+      "Thicker paper (cardstock) works better with colored pencils and crayons.",
+      "Print multiple copies so friends can color together!",
+    ],
+  },
+  cookie: {
+    message: "This site uses cookies to improve your experience.",
+    accept: "Accept",
+    decline: "Decline",
+  },
+  footer: {
+    copyright: "© 2026 OurColoring. All rights reserved.",
+    printGuide: "Print Guide",
+  },
+} as const;
