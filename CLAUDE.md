@@ -276,4 +276,4 @@ ourcoloring/
 | 2026-02-20 | Sprint 2: Canny Edge Detection 클라이언트 사이드 구현 |
 | 2026-02-20 | Sprint 3: PNG/PDF 다운로드, 일일 3장 제한 + 이메일 해제, 카카오톡/링크 공유 구현 |
 | 2026-02-20 | 브랜딩 ColorMyKid → OurColoring 반영 (사이트 URL, OG 태그, 파일명, i18n) |
-| 2026-02-20 | Sprint 4: 랜딩페이지, GA4(G-2RNZCY0YPM), 쿠키 동의, SEO(구조화데이터/hreflang/OG), 사이트맵/robots.txt, 프린트 가이드 페이지 |
+| 2026-02-20 | Sprint 4: 랜딩페이지, GA4(G-2RWZCY0YPM), 쿠키 동의, SEO(구조화데이터/hreflang/OG), 사이트맵/robots.txt, 프린트 가이드 페이지 |
