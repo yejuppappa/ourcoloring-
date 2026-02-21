@@ -1,3 +1,16 @@
 ---
-return Astro.redirect("/ko/");
+// Cloudflare Pages handles the 301 redirect via public/_redirects.
+// This page is a fallback for environments that don't support _redirects.
 ---
+
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="naver-site-verification" content="edb3efc31035cbfe5e824585be1cd9a5aebacfac" />
+    <meta http-equiv="refresh" content="0;url=/ko/" />
+    <link rel="canonical" href="https://ourcoloring.com/ko/" />
+    <title>OurColoring</title>
+  </head>
+  <body></body>
+</html>
