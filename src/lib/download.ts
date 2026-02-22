@@ -1,9 +1,3 @@
-import {
-  getDownloadDataUrl,
-  type ProcessingCache,
-  type ProcessingOptions,
-} from "./edge-detection";
-
 function triggerDownload(dataUrl: string, filename: string): void {
   const a = document.createElement("a");
   a.href = dataUrl;
@@ -13,22 +7,14 @@ function triggerDownload(dataUrl: string, filename: string): void {
   document.body.removeChild(a);
 }
 
-export function downloadPNG(
-  cache: ProcessingCache,
-  options: ProcessingOptions,
-): void {
-  const dataUrl = getDownloadDataUrl(cache, options);
+export function downloadPNG(dataUrl: string): void {
   triggerDownload(dataUrl, `ourcoloring_${Date.now()}.png`);
 }
 
-export async function downloadPDF(
-  cache: ProcessingCache,
-  options: ProcessingOptions,
-): Promise<void> {
-  const dataUrl = getDownloadDataUrl(cache, options);
+export async function downloadPDF(dataUrl: string): Promise<void> {
   const { jsPDF } = await import("jspdf");
 
-  // A4: 210 × 297 mm
+  // A4: 210 x 297 mm
   const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const pageW = 210;
   const pageH = 297;
@@ -36,8 +22,9 @@ export async function downloadPDF(
   const areaW = pageW - 2 * margin;
   const areaH = pageH - 2 * margin - 10; // reserve 10mm for watermark
 
-  // Fit image proportionally
-  const ratio = cache.width / cache.height;
+  // Get image dimensions
+  const img = await loadImageElement(dataUrl);
+  const ratio = img.naturalWidth / img.naturalHeight;
   let imgW = areaW;
   let imgH = imgW / ratio;
 
@@ -58,4 +45,13 @@ export async function downloadPDF(
   pdf.text("ourcoloring.com", pageW / 2, pageH - 8, { align: "center" });
 
   pdf.save(`ourcoloring_${Date.now()}.pdf`);
+}
+
+function loadImageElement(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
 }

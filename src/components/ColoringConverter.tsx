@@ -1,9 +1,10 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import {
-  loadAndPrepare,
-  processWithSettings,
-  type ProcessingCache,
-} from "@/lib/edge-detection";
+  convertImage,
+  createPreviewUrl,
+  type BackgroundMode,
+  type Difficulty,
+} from "@/lib/convert-api";
 import {
   canConvert,
   incrementCount,
@@ -32,9 +33,26 @@ interface Translations {
   errorFormat: string;
   errorSize: string;
   errorGeneric: string;
+  errorRetry: string;
+  modeTitle: string;
+  modeKeep: string;
+  modeKeepDesc: string;
+  modeRemove: string;
+  modeRemoveDesc: string;
+  modeCreate: string;
+  modeCreateDesc: string;
+  difficultyTitle: string;
+  difficultyHigh: string;
+  difficultyHighDesc: string;
+  difficultyMedium: string;
+  difficultyMediumDesc: string;
+  difficultyLow: string;
+  difficultyLowDesc: string;
+  convertButton: string;
   processing: string;
-  sensitivity: string;
-  thickness: string;
+  loadingMsg1: string;
+  loadingMsg2: string;
+  loadingMsg3: string;
   viewOriginal: string;
   viewResult: string;
   tryAnother: string;
@@ -43,7 +61,6 @@ interface Translations {
   downloadPdf: string;
   downloadPreparing: string;
   limitCounter: string;
-  limitUnlimited: string;
   limitTitle: string;
   limitSubtitle: string;
   limitEmailPlaceholder: string;
@@ -59,35 +76,44 @@ interface Props {
   locale: string;
 }
 
-type Phase = "idle" | "email-gate" | "loading" | "result";
+type Phase = "idle" | "options" | "email-gate" | "loading" | "result";
 
 export default function ColoringConverter({ t, locale }: Props) {
   // ── State ──────────────────────────────────────────────
   const [phase, setPhase] = useState<Phase>("idle");
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState("");
+
+  // File & preview
+  const [file, setFile] = useState<File | null>(null);
   const [originalUrl, setOriginalUrl] = useState("");
   const [resultUrl, setResultUrl] = useState("");
-  const [sensitivity, setSensitivity] = useState(50);
-  const [thickness, setThickness] = useState(2);
+
+  // Options
+  const [mode, setMode] = useState<BackgroundMode>("keep");
+  const [difficulty, setDifficulty] = useState<Difficulty>("high");
+
+  // View toggle
   const [viewMode, setViewMode] = useState<"original" | "result">("result");
 
-  // limit
-  const [limit, setLimit] = useState({ remaining: 3, total: 3, unlimited: false });
+  // Limit
+  const [limit, setLimit] = useState({ remaining: 3, total: 3 });
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
 
-  // download
+  // Loading animation
+  const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
+
+  // Download
   const [pdfLoading, setPdfLoading] = useState(false);
 
-  // share
+  // Share
   const [copied, setCopied] = useState(false);
 
-  // refs
-  const cacheRef = useRef<ProcessingCache | null>(null);
+  // Refs
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const pendingFileRef = useRef<File | null>(null);
-  const debounceRef = useRef<number>(0);
+
+  const loadingMessages = [t.loadingMsg1, t.loadingMsg2, t.loadingMsg3];
 
   // Initialize limit on mount & remove skeleton
   useEffect(() => {
@@ -95,68 +121,81 @@ export default function ColoringConverter({ t, locale }: Props) {
     document.getElementById("converter-skeleton")?.remove();
   }, []);
 
+  // Cycle loading messages
+  useEffect(() => {
+    if (phase !== "loading") return;
+    setLoadingMsgIdx(0);
+    const interval = setInterval(() => {
+      setLoadingMsgIdx((i) => (i + 1) % 3);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [phase]);
+
   // ── File validation ────────────────────────────────────
   const validateFile = useCallback(
-    (file: File): string | null => {
-      if (!ACCEPTED_TYPES.includes(file.type)) return t.errorFormat;
-      if (file.size > MAX_SIZE) return t.errorSize;
+    (f: File): string | null => {
+      if (!ACCEPTED_TYPES.includes(f.type)) return t.errorFormat;
+      if (f.size > MAX_SIZE) return t.errorSize;
       return null;
     },
     [t],
   );
 
-  // ── Process file (after limit check) ──────────────────
-  const processFile = useCallback(
-    async (file: File) => {
-      setPhase("loading");
-      setViewMode("result");
-      setError("");
-
-      try {
-        const cache = await loadAndPrepare(file);
-        cacheRef.current = cache;
-        setOriginalUrl(cache.originalUrl);
-
-        const url = processWithSettings(cache, { sensitivity, thickness });
-        setResultUrl(url);
-        setPhase("result");
-
-        incrementCount();
-        setLimit(getRemainingCount());
-        trackConversion();
-      } catch {
-        setError(t.errorGeneric);
-        setPhase("idle");
-      }
-    },
-    [sensitivity, thickness, t.errorGeneric],
-  );
-
   // ── Handle file selection ──────────────────────────────
   const handleFile = useCallback(
-    async (file: File) => {
-      const validationError = validateFile(file);
+    (f: File) => {
+      const validationError = validateFile(f);
       if (validationError) {
         setError(validationError);
         return;
       }
 
       setError("");
+      setFile(f);
+      setOriginalUrl(createPreviewUrl(f));
 
       if (!canConvert()) {
-        pendingFileRef.current = file;
         setPhase("email-gate");
         return;
       }
 
-      await processFile(file);
+      setPhase("options");
     },
-    [validateFile, processFile],
+    [validateFile],
   );
+
+  // ── Convert ────────────────────────────────────────────
+  const handleConvert = useCallback(async () => {
+    if (!file) return;
+
+    // Re-check limit
+    if (!canConvert()) {
+      setPhase("email-gate");
+      return;
+    }
+
+    setPhase("loading");
+    setError("");
+
+    try {
+      const url = await convertImage(file, mode, difficulty);
+      setResultUrl(url);
+      setViewMode("result");
+      setPhase("result");
+
+      incrementCount();
+      setLimit(getRemainingCount());
+      trackConversion();
+    } catch {
+      // Error: go back to options with error message (don't count)
+      setError(t.errorGeneric);
+      setPhase("options");
+    }
+  }, [file, mode, difficulty, t.errorGeneric]);
 
   // ── Email submit ───────────────────────────────────────
   const handleEmailSubmit = useCallback(
-    async (e: React.FormEvent) => {
+    (e: React.FormEvent) => {
       e.preventDefault();
 
       if (!validateEmail(email)) {
@@ -169,48 +208,32 @@ export default function ColoringConverter({ t, locale }: Props) {
       setEmailError("");
       trackEmailSignup();
 
-      if (pendingFileRef.current) {
-        await processFile(pendingFileRef.current);
-        pendingFileRef.current = null;
+      // Continue to options with the pending file
+      if (file) {
+        setPhase("options");
       }
     },
-    [email, t.limitInvalidEmail, processFile],
+    [email, t.limitInvalidEmail, file],
   );
-
-  // ── Reprocess on control change ────────────────────────
-  useEffect(() => {
-    if (!cacheRef.current || phase !== "result") return;
-
-    window.clearTimeout(debounceRef.current);
-    debounceRef.current = window.setTimeout(() => {
-      const url = processWithSettings(cacheRef.current!, {
-        sensitivity,
-        thickness,
-      });
-      setResultUrl(url);
-    }, 150);
-
-    return () => window.clearTimeout(debounceRef.current);
-  }, [sensitivity, thickness, phase]);
 
   // ── Download handlers ──────────────────────────────────
   const handleDownloadPng = useCallback(() => {
-    if (cacheRef.current) {
-      downloadPNG(cacheRef.current, { sensitivity, thickness });
+    if (resultUrl) {
+      downloadPNG(resultUrl);
       trackDownloadPng();
     }
-  }, [sensitivity, thickness]);
+  }, [resultUrl]);
 
   const handleDownloadPdf = useCallback(async () => {
-    if (!cacheRef.current) return;
+    if (!resultUrl) return;
     setPdfLoading(true);
     try {
-      await downloadPDF(cacheRef.current, { sensitivity, thickness });
+      await downloadPDF(resultUrl);
       trackDownloadPdf();
     } finally {
       setPdfLoading(false);
     }
-  }, [sensitivity, thickness]);
+  }, [resultUrl]);
 
   // ── Share handlers ─────────────────────────────────────
   const handleShareKakao = useCallback(() => {
@@ -229,19 +252,19 @@ export default function ColoringConverter({ t, locale }: Props) {
 
   // ── Reset ──────────────────────────────────────────────
   const reset = useCallback(() => {
-    cacheRef.current = null;
-    pendingFileRef.current = null;
+    if (originalUrl) URL.revokeObjectURL(originalUrl);
     setPhase("idle");
+    setFile(null);
     setOriginalUrl("");
     setResultUrl("");
     setError("");
-    setSensitivity(50);
-    setThickness(2);
+    setMode("keep");
+    setDifficulty("high");
     setViewMode("result");
     setPdfLoading(false);
     setCopied(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
-  }, []);
+  }, [originalUrl]);
 
   // ── Drag & Drop ────────────────────────────────────────
   const onDragOver = useCallback((e: React.DragEvent) => {
@@ -256,15 +279,15 @@ export default function ColoringConverter({ t, locale }: Props) {
     (e: React.DragEvent) => {
       e.preventDefault();
       setIsDragging(false);
-      const file = e.dataTransfer.files[0];
-      if (file) handleFile(file);
+      const f = e.dataTransfer.files[0];
+      if (f) handleFile(f);
     },
     [handleFile],
   );
   const onFileChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (file) handleFile(file);
+      const f = e.target.files?.[0];
+      if (f) handleFile(f);
     },
     [handleFile],
   );
@@ -272,14 +295,12 @@ export default function ColoringConverter({ t, locale }: Props) {
   // ── Render ─────────────────────────────────────────────
   return (
     <div className="mx-auto w-full max-w-xl px-4">
-      {/* Limit counter (shown in idle & result) */}
-      {(phase === "idle" || phase === "result") && (
+      {/* Limit counter (shown in idle, options, result) */}
+      {(phase === "idle" || phase === "options" || phase === "result") && (
         <div className="mb-3 text-center text-sm text-[#A09890]">
           {t.limitCounter}:{" "}
           <span className="font-semibold text-[#3D3530]">
-            {limit.unlimited
-              ? t.limitUnlimited
-              : `${limit.remaining}/${limit.total}`}
+            {limit.remaining}/{limit.total}
           </span>
         </div>
       )}
@@ -322,10 +343,103 @@ export default function ColoringConverter({ t, locale }: Props) {
         </div>
       )}
 
+      {/* ── Options: Mode + Difficulty ─────────────────── */}
+      {phase === "options" && (
+        <div className="space-y-5">
+          {/* Preview thumbnail */}
+          {originalUrl && (
+            <div className="overflow-hidden rounded-2xl border border-[#E8DFD6] bg-white shadow-sm">
+              <img
+                src={originalUrl}
+                alt="Preview"
+                className="mx-auto max-h-48 object-contain"
+              />
+            </div>
+          )}
+
+          {/* Error banner */}
+          {error && (
+            <div className="rounded-xl bg-red-50 px-4 py-3 text-center text-sm text-red-600">
+              {error}
+            </div>
+          )}
+
+          {/* Background mode */}
+          <div>
+            <h3 className="mb-2 text-sm font-semibold text-[#3D3530]">{t.modeTitle}</h3>
+            <div className="grid grid-cols-3 gap-2">
+              <ModeCard
+                selected={mode === "keep"}
+                onClick={() => setMode("keep")}
+                emoji="🏞️"
+                title={t.modeKeep}
+                desc={t.modeKeepDesc}
+              />
+              <ModeCard
+                selected={mode === "remove"}
+                onClick={() => setMode("remove")}
+                emoji="✂️"
+                title={t.modeRemove}
+                desc={t.modeRemoveDesc}
+              />
+              <ModeCard
+                selected={mode === "create"}
+                onClick={() => setMode("create")}
+                emoji="🎨"
+                title={t.modeCreate}
+                desc={t.modeCreateDesc}
+              />
+            </div>
+          </div>
+
+          {/* Difficulty */}
+          <div>
+            <h3 className="mb-2 text-sm font-semibold text-[#3D3530]">{t.difficultyTitle}</h3>
+            <div className="grid grid-cols-3 gap-2">
+              <DifficultyBtn
+                selected={difficulty === "high"}
+                onClick={() => setDifficulty("high")}
+                title={t.difficultyHigh}
+                desc={t.difficultyHighDesc}
+              />
+              <DifficultyBtn
+                selected={difficulty === "medium"}
+                onClick={() => setDifficulty("medium")}
+                title={t.difficultyMedium}
+                desc={t.difficultyMediumDesc}
+              />
+              <DifficultyBtn
+                selected={difficulty === "low"}
+                onClick={() => setDifficulty("low")}
+                title={t.difficultyLow}
+                desc={t.difficultyLowDesc}
+              />
+            </div>
+          </div>
+
+          {/* Convert button */}
+          <button
+            onClick={handleConvert}
+            className="w-full rounded-xl bg-[#FF6B4A] px-4 py-4 text-base font-bold text-white transition-transform hover:scale-[1.02] active:scale-[0.98]"
+          >
+            {t.convertButton}
+          </button>
+
+          {/* Back to upload */}
+          <button
+            onClick={reset}
+            className="w-full text-center text-sm text-[#A09890] underline hover:text-[#3D3530]"
+          >
+            {t.tryAnother}
+          </button>
+
+          <PrivacyBadge text={t.privacy} />
+        </div>
+      )}
+
       {/* ── Email Gate ───────────────────────────────── */}
       {phase === "email-gate" && (
         <div className="rounded-2xl border border-[#E8DFD6] bg-white p-6 text-center shadow-sm">
-          {/* Illustration */}
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#FFF0E5]">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[#FF6B4A]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
@@ -363,9 +477,26 @@ export default function ColoringConverter({ t, locale }: Props) {
 
       {/* ── Loading ──────────────────────────────────── */}
       {phase === "loading" && (
-        <div className="flex flex-col items-center justify-center rounded-2xl bg-white px-6 py-20">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#FFD6C9] border-t-[#FF6B4A]" />
-          <p className="mt-4 text-[#7A7067]">{t.processing}</p>
+        <div className="flex flex-col items-center justify-center rounded-2xl bg-white px-6 py-20 shadow-sm border border-[#E8DFD6]">
+          {/* Animated pencil */}
+          <div className="relative mb-6">
+            <div className="flex items-center justify-center">
+              <span className="animate-bounce text-5xl" style={{ animationDuration: "1.2s" }}>
+                🖍️
+              </span>
+            </div>
+            {/* Drawing dots */}
+            <div className="mt-3 flex justify-center gap-1.5">
+              <span className="inline-block h-2 w-2 rounded-full bg-[#FF6B4A] animate-pulse" style={{ animationDelay: "0s" }} />
+              <span className="inline-block h-2 w-2 rounded-full bg-[#FFB347] animate-pulse" style={{ animationDelay: "0.2s" }} />
+              <span className="inline-block h-2 w-2 rounded-full bg-[#FF6B4A] animate-pulse" style={{ animationDelay: "0.4s" }} />
+              <span className="inline-block h-2 w-2 rounded-full bg-[#FFB347] animate-pulse" style={{ animationDelay: "0.6s" }} />
+              <span className="inline-block h-2 w-2 rounded-full bg-[#FF6B4A] animate-pulse" style={{ animationDelay: "0.8s" }} />
+            </div>
+          </div>
+          <p className="text-[#7A7067] transition-opacity duration-300">
+            {loadingMessages[loadingMsgIdx]}
+          </p>
         </div>
       )}
 
@@ -385,12 +516,6 @@ export default function ColoringConverter({ t, locale }: Props) {
               alt={viewMode === "result" ? t.viewResult : t.viewOriginal}
               className="w-full"
             />
-          </div>
-
-          {/* Controls */}
-          <div className="mt-5 space-y-4 rounded-2xl border border-[#E8DFD6] bg-white p-5 shadow-sm">
-            <Slider id="sensitivity" label={t.sensitivity} value={sensitivity} min={5} max={95} onChange={setSensitivity} />
-            <Slider id="thickness" label={t.thickness} value={thickness} min={1} max={5} onChange={setThickness} />
           </div>
 
           {/* Download */}
@@ -447,6 +572,61 @@ export default function ColoringConverter({ t, locale }: Props) {
 
 // ── Sub-components ───────────────────────────────────────
 
+function ModeCard({
+  selected,
+  onClick,
+  emoji,
+  title,
+  desc,
+}: {
+  selected: boolean;
+  onClick: () => void;
+  emoji: string;
+  title: string;
+  desc: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex flex-col items-center rounded-xl border-2 px-2 py-3 text-center transition-all ${
+        selected
+          ? "border-[#FF6B4A] bg-[#FFF0E5] shadow-sm"
+          : "border-[#E8DFD6] bg-white hover:border-[#FFB8A3]"
+      }`}
+    >
+      <span className="text-2xl">{emoji}</span>
+      <span className="mt-1.5 text-xs font-semibold text-[#3D3530]">{title}</span>
+      <span className="mt-0.5 text-[10px] leading-tight text-[#7A7067]">{desc}</span>
+    </button>
+  );
+}
+
+function DifficultyBtn({
+  selected,
+  onClick,
+  title,
+  desc,
+}: {
+  selected: boolean;
+  onClick: () => void;
+  title: string;
+  desc: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`rounded-xl border-2 px-3 py-2.5 text-center transition-all ${
+        selected
+          ? "border-[#FF6B4A] bg-[#FFF0E5] shadow-sm"
+          : "border-[#E8DFD6] bg-white hover:border-[#FFB8A3]"
+      }`}
+    >
+      <span className="block text-sm font-bold text-[#3D3530]">{title}</span>
+      <span className="block text-[10px] text-[#7A7067]">{desc}</span>
+    </button>
+  );
+}
+
 function ToggleBtn({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) {
   return (
     <button
@@ -457,27 +637,6 @@ function ToggleBtn({ active, onClick, label }: { active: boolean; onClick: () =>
     >
       {label}
     </button>
-  );
-}
-
-function Slider({ id, label, value, min, max, onChange }: { id: string; label: string; value: number; min: number; max: number; onChange: (v: number) => void }) {
-  return (
-    <div>
-      <div className="flex items-center justify-between">
-        <label htmlFor={id} className="text-sm font-medium text-[#3D3530]">{label}</label>
-        <span className="text-xs text-[#A09890]">{value}</span>
-      </div>
-      <input
-        id={id}
-        type="range"
-        min={min}
-        max={max}
-        step={1}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="mt-1 w-full accent-[#FF6B4A]"
-      />
-    </div>
   );
 }
 
