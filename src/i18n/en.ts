@@ -59,6 +59,12 @@ export default {
     shareKakao: "Share via KakaoTalk",
     shareCopyLink: "Copy link",
     shareCopied: "Copied!",
+    sampleSectionTitle: "See how it works",
+    sampleDiffTitle: "Difficulty comparison",
+    sampleBgTitle: "Background mode comparison",
+    sampleDiffNote: "Lower difficulty may differ from the original",
+    uploadFirst: "Please upload a photo first",
+    sampleOriginal: "Original",
   },
   landing: {
     howTitle: "It's this easy",

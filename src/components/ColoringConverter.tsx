@@ -26,6 +26,19 @@ import {
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_SIZE = 10 * 1024 * 1024;
 
+// Sample image maps
+const BG_SAMPLES: Record<BackgroundMode, string> = {
+  keep: "/samples/dog-keep-bg.webp",
+  remove: "/samples/dog-remove-bg.webp",
+  create: "/samples/dog-create-bg.webp",
+};
+
+const DIFF_SAMPLES: Record<Difficulty, string> = {
+  high: "/samples/robot-detail.webp",
+  medium: "/samples/robot-medium.webp",
+  low: "/samples/robot-simple.webp",
+};
+
 interface Translations {
   uploadTitle: string;
   uploadSubtitle: string;
@@ -69,6 +82,12 @@ interface Translations {
   shareKakao: string;
   shareCopyLink: string;
   shareCopied: string;
+  sampleSectionTitle: string;
+  sampleDiffTitle: string;
+  sampleBgTitle: string;
+  sampleDiffNote: string;
+  uploadFirst: string;
+  sampleOriginal: string;
 }
 
 interface Props {
@@ -76,13 +95,14 @@ interface Props {
   locale: string;
 }
 
-type Phase = "idle" | "options" | "email-gate" | "loading" | "result";
+type Phase = "idle" | "email-gate" | "loading" | "result";
 
 export default function ColoringConverter({ t, locale }: Props) {
   // ── State ──────────────────────────────────────────────
   const [phase, setPhase] = useState<Phase>("idle");
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState("");
+  const [uploadFirstMsg, setUploadFirstMsg] = useState(false);
 
   // File & preview
   const [file, setFile] = useState<File | null>(null);
@@ -131,6 +151,13 @@ export default function ColoringConverter({ t, locale }: Props) {
     return () => clearInterval(interval);
   }, [phase]);
 
+  // Auto-hide "upload first" message
+  useEffect(() => {
+    if (!uploadFirstMsg) return;
+    const timer = setTimeout(() => setUploadFirstMsg(false), 2500);
+    return () => clearTimeout(timer);
+  }, [uploadFirstMsg]);
+
   // ── File validation ────────────────────────────────────
   const validateFile = useCallback(
     (f: File): string | null => {
@@ -151,24 +178,22 @@ export default function ColoringConverter({ t, locale }: Props) {
       }
 
       setError("");
+      setUploadFirstMsg(false);
       setFile(f);
       setOriginalUrl(createPreviewUrl(f));
-
-      if (!canConvert()) {
-        setPhase("email-gate");
-        return;
-      }
-
-      setPhase("options");
+      // Stay in idle phase — options are already visible
     },
     [validateFile],
   );
 
   // ── Convert ────────────────────────────────────────────
   const handleConvert = useCallback(async () => {
-    if (!file) return;
+    if (!file) {
+      setUploadFirstMsg(true);
+      return;
+    }
 
-    // Re-check limit
+    // Check limit
     if (!canConvert()) {
       setPhase("email-gate");
       return;
@@ -187,9 +212,8 @@ export default function ColoringConverter({ t, locale }: Props) {
       setLimit(getRemainingCount());
       trackConversion();
     } catch {
-      // Error: go back to options with error message (don't count)
       setError(t.errorGeneric);
-      setPhase("options");
+      setPhase("idle");
     }
   }, [file, mode, difficulty, t.errorGeneric]);
 
@@ -208,12 +232,10 @@ export default function ColoringConverter({ t, locale }: Props) {
       setEmailError("");
       trackEmailSignup();
 
-      // Continue to options with the pending file
-      if (file) {
-        setPhase("options");
-      }
+      // Back to idle with file still loaded
+      setPhase("idle");
     },
-    [email, t.limitInvalidEmail, file],
+    [email, t.limitInvalidEmail],
   );
 
   // ── Download handlers ──────────────────────────────────
@@ -258,6 +280,7 @@ export default function ColoringConverter({ t, locale }: Props) {
     setOriginalUrl("");
     setResultUrl("");
     setError("");
+    setUploadFirstMsg(false);
     setMode("keep");
     setDifficulty("high");
     setViewMode("result");
@@ -295,8 +318,8 @@ export default function ColoringConverter({ t, locale }: Props) {
   // ── Render ─────────────────────────────────────────────
   return (
     <div className="mx-auto w-full max-w-xl px-4">
-      {/* Limit counter (shown in idle, options, result) */}
-      {(phase === "idle" || phase === "options" || phase === "result") && (
+      {/* Limit counter (shown in idle, result) */}
+      {(phase === "idle" || phase === "result") && (
         <div className="mb-3 text-center text-sm text-[#A09890]">
           {t.limitCounter}:{" "}
           <span className="font-semibold text-[#3D3530]">
@@ -305,64 +328,59 @@ export default function ColoringConverter({ t, locale }: Props) {
         </div>
       )}
 
-      {/* ── Idle: Upload ─────────────────────────────── */}
+      {/* ── Idle: Upload + Options + Samples ─────────── */}
       {phase === "idle" && (
-        <div>
-          <div
-            role="button"
-            tabIndex={0}
-            onClick={() => fileInputRef.current?.click()}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ")
-                fileInputRef.current?.click();
-            }}
-            onDragOver={onDragOver}
-            onDragLeave={onDragLeave}
-            onDrop={onDrop}
-            className={`flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-6 py-16 transition-all duration-200 ${
-              isDragging
-                ? "scale-[1.01] border-[#FF6B4A] bg-[#FFF0E5]"
-                : "border-[#D4C8BE] bg-white hover:border-[#FF6B4A] hover:bg-[#FFFAF5]"
-            }`}
-          >
-            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#FFF0E5]">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[#FF6B4A]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-              </svg>
-            </div>
-            <p className="text-lg font-semibold text-[#3D3530]">{t.uploadTitle}</p>
-            <p className="mt-1 text-sm text-[#7A7067]">{t.uploadSubtitle}</p>
-            <p className="mt-3 text-xs text-[#A09890]">{t.uploadFormats}</p>
-          </div>
-
-          <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={onFileChange} />
-
-          {error && <p className="mt-3 text-center text-sm text-red-500">{error}</p>}
-
-          <PrivacyBadge text={t.privacy} />
-        </div>
-      )}
-
-      {/* ── Options: Mode + Difficulty ─────────────────── */}
-      {phase === "options" && (
         <div className="space-y-5">
-          {/* Preview thumbnail */}
-          {originalUrl && (
+          {/* Upload area */}
+          {!file ? (
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => fileInputRef.current?.click()}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ")
+                  fileInputRef.current?.click();
+              }}
+              onDragOver={onDragOver}
+              onDragLeave={onDragLeave}
+              onDrop={onDrop}
+              className={`flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-6 py-16 transition-all duration-200 ${
+                isDragging
+                  ? "scale-[1.01] border-[#FF6B4A] bg-[#FFF0E5]"
+                  : "border-[#D4C8BE] bg-white hover:border-[#FF6B4A] hover:bg-[#FFFAF5]"
+              }`}
+            >
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#FFF0E5]">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[#FF6B4A]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                </svg>
+              </div>
+              <p className="text-lg font-semibold text-[#3D3530]">{t.uploadTitle}</p>
+              <p className="mt-1 text-sm text-[#7A7067]">{t.uploadSubtitle}</p>
+              <p className="mt-3 text-xs text-[#A09890]">{t.uploadFormats}</p>
+            </div>
+          ) : (
+            /* Preview thumbnail + change photo button */
             <div className="overflow-hidden rounded-2xl border border-[#E8DFD6] bg-white shadow-sm">
               <img
                 src={originalUrl}
                 alt="Preview"
                 className="mx-auto max-h-48 object-contain"
               />
+              <div className="border-t border-[#E8DFD6] px-4 py-2 text-center">
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="text-sm font-medium text-[#FF6B4A] hover:underline"
+                >
+                  {t.tryAnother}
+                </button>
+              </div>
             </div>
           )}
 
-          {/* Error banner */}
-          {error && (
-            <div className="rounded-xl bg-red-50 px-4 py-3 text-center text-sm text-red-600">
-              {error}
-            </div>
-          )}
+          <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={onFileChange} />
+
+          {error && <p className="text-center text-sm text-red-500">{error}</p>}
 
           {/* Background mode */}
           <div>
@@ -390,6 +408,13 @@ export default function ColoringConverter({ t, locale }: Props) {
                 desc={t.modeCreateDesc}
               />
             </div>
+            {/* Background sample comparison */}
+            <SampleCompare
+              originalSrc="/samples/dog-original.webp"
+              resultSrc={BG_SAMPLES[mode]}
+              originalLabel={t.sampleOriginal}
+              resultLabel={t.viewResult}
+            />
           </div>
 
           {/* Difficulty */}
@@ -415,23 +440,33 @@ export default function ColoringConverter({ t, locale }: Props) {
                 desc={t.difficultyLowDesc}
               />
             </div>
+            {/* Difficulty sample comparison */}
+            <SampleCompare
+              originalSrc="/samples/robot-original.webp"
+              resultSrc={DIFF_SAMPLES[difficulty]}
+              originalLabel={t.sampleOriginal}
+              resultLabel={t.viewResult}
+            />
+            <p className="mt-1.5 text-center text-xs text-[#A09890]">
+              {t.sampleDiffNote}
+            </p>
           </div>
 
           {/* Convert button */}
-          <button
-            onClick={handleConvert}
-            className="w-full rounded-xl bg-[#FF6B4A] px-4 py-4 text-base font-bold text-white transition-transform hover:scale-[1.02] active:scale-[0.98]"
-          >
-            {t.convertButton}
-          </button>
-
-          {/* Back to upload */}
-          <button
-            onClick={reset}
-            className="w-full text-center text-sm text-[#A09890] underline hover:text-[#3D3530]"
-          >
-            {t.tryAnother}
-          </button>
+          <div>
+            <button
+              onClick={handleConvert}
+              className="w-full rounded-xl bg-[#FF6B4A] px-4 py-4 text-base font-bold text-white transition-transform hover:scale-[1.02] active:scale-[0.98]"
+            >
+              {t.convertButton}
+            </button>
+            {/* "Upload first" toast */}
+            {uploadFirstMsg && (
+              <p className="mt-2 text-center text-sm font-medium text-[#FF6B4A] animate-pulse">
+                {t.uploadFirst}
+              </p>
+            )}
+          </div>
 
           <PrivacyBadge text={t.privacy} />
         </div>
@@ -571,6 +606,34 @@ export default function ColoringConverter({ t, locale }: Props) {
 }
 
 // ── Sub-components ───────────────────────────────────────
+
+function SampleCompare({
+  originalSrc,
+  resultSrc,
+  originalLabel,
+  resultLabel,
+}: {
+  originalSrc: string;
+  resultSrc: string;
+  originalLabel: string;
+  resultLabel: string;
+}) {
+  return (
+    <div className="mt-3 flex items-center gap-2">
+      <div className="flex-1 overflow-hidden rounded-lg border border-[#E8DFD6]">
+        <img src={originalSrc} alt={originalLabel} loading="lazy" className="w-full object-cover" />
+        <p className="bg-[#F5EDE4] py-1 text-center text-[10px] font-medium text-[#7A7067]">{originalLabel}</p>
+      </div>
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 flex-shrink-0 text-[#A09890]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+      </svg>
+      <div className="flex-1 overflow-hidden rounded-lg border border-[#E8DFD6]">
+        <img src={resultSrc} alt={resultLabel} loading="lazy" className="w-full object-cover" />
+        <p className="bg-[#F5EDE4] py-1 text-center text-[10px] font-medium text-[#7A7067]">{resultLabel}</p>
+      </div>
+    </div>
+  );
+}
 
 function ModeCard({
   selected,

@@ -58,6 +58,12 @@ export default {
     shareKakao: "카카오톡 공유",
     shareCopyLink: "링크 복사",
     shareCopied: "복사되었습니다!",
+    sampleSectionTitle: "이렇게 변환돼요",
+    sampleDiffTitle: "난이도별 비교",
+    sampleBgTitle: "배경 모드별 비교",
+    sampleDiffNote: "난이도를 낮추면 원본과 달라질 수 있어요",
+    uploadFirst: "사진을 먼저 올려주세요",
+    sampleOriginal: "원본",
   },
   landing: {
     howTitle: "이렇게 쉬워요",
