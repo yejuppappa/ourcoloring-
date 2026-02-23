@@ -1,7 +1,7 @@
 /**
  * Cloudflare Pages Function — POST /api/convert
  *
- * Calls Grok Image API (grok-imagine-image) to generate a coloring page.
+ * Calls Grok Image Edit API (grok-imagine-image) to convert a photo into a coloring page.
  * When XAI_API_KEY is missing: returns { mock: true } so the client
  * falls back to client-side edge detection.
  */
@@ -86,20 +86,31 @@ export async function onRequestPost(context: {
 
     const prompt = buildPrompt(mode, difficulty);
 
-    // Call x.ai Grok Image Generation API
-    const grokRes = await fetch("https://api.x.ai/v1/images/generations", {
+    // Build request body for Grok Image Edit API
+    const requestBody = {
+      model: "grok-imagine-image",
+      prompt: prompt,
+      n: 1,
+      response_format: "b64_json",
+      image: {
+        url: image,
+        type: "image_url",
+      },
+    };
+
+    console.log("[convert] Request body:", JSON.stringify({
+      ...requestBody,
+      image: { ...requestBody.image, url: requestBody.image.url.slice(0, 80) + "..." },
+    }));
+
+    // Call x.ai Grok Image Edit API
+    const grokRes = await fetch("https://api.x.ai/v1/images/edits", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${apiKey}`,
       },
-      body: JSON.stringify({
-        model: "grok-imagine-image",
-        prompt: prompt,
-        n: 1,
-        response_format: "b64_json",
-        image: image,
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!grokRes.ok) {
@@ -115,6 +126,9 @@ export async function onRequestPost(context: {
     }
 
     const grokData: any = await grokRes.json();
+
+    console.log("[convert] Response keys:", Object.keys(grokData));
+    console.log("[convert] data[0] keys:", grokData.data?.[0] ? Object.keys(grokData.data[0]) : "no data");
 
     // Extract base64 image from response
     const b64 = grokData.data?.[0]?.b64_json;
