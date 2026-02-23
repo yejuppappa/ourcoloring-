@@ -1,7 +1,7 @@
 /**
  * Cloudflare Pages Function — POST /api/convert
  *
- * When XAI_API_KEY is set: calls Grok API to generate a coloring page.
+ * Calls Grok Image API (grok-imagine-image) to generate a coloring page.
  * When XAI_API_KEY is missing: returns { mock: true } so the client
  * falls back to client-side edge detection.
  */
@@ -86,31 +86,19 @@ export async function onRequestPost(context: {
 
     const prompt = buildPrompt(mode, difficulty);
 
-    // Call x.ai Grok Image API
-    // Uses chat completions with image input for photo-to-coloring transformation
-    const grokRes = await fetch("https://api.x.ai/v1/chat/completions", {
+    // Call x.ai Grok Image Generation API
+    const grokRes = await fetch("https://api.x.ai/v1/images/generations", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "grok-2-image",
-        messages: [
-          {
-            role: "user",
-            content: [
-              {
-                type: "image_url",
-                image_url: { url: image },
-              },
-              {
-                type: "text",
-                text: prompt,
-              },
-            ],
-          },
-        ],
+        model: "grok-imagine-image",
+        prompt: prompt,
+        n: 1,
+        response_format: "b64_json",
+        image: image,
       }),
     });
 
@@ -128,32 +116,18 @@ export async function onRequestPost(context: {
 
     const grokData: any = await grokRes.json();
 
-    // Extract generated image from response
-    // Grok-2-image returns images as URLs in the message content
-    const content = grokData.choices?.[0]?.message?.content;
-    let imageUrl: string | null = null;
+    // Extract base64 image from response
+    const b64 = grokData.data?.[0]?.b64_json;
 
-    if (typeof content === "string") {
-      // Check if it contains an image URL
-      const urlMatch = content.match(/https:\/\/[^\s"]+\.(png|jpg|jpeg|webp)/i);
-      if (urlMatch) imageUrl = urlMatch[0];
-    } else if (Array.isArray(content)) {
-      // Content array format
-      for (const item of content) {
-        if (item.type === "image_url") {
-          imageUrl = item.image_url?.url;
-          break;
-        }
-      }
-    }
-
-    if (!imageUrl) {
+    if (!b64) {
       console.error("No image in Grok response:", JSON.stringify(grokData).slice(0, 500));
       return new Response(
         JSON.stringify({ error: "No image in AI response" }),
         { status: 502, headers: corsHeaders },
       );
     }
+
+    const imageUrl = `data:image/png;base64,${b64}`;
 
     return new Response(
       JSON.stringify({ mock: false, imageUrl }),
