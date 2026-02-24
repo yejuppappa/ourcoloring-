@@ -2,7 +2,7 @@ export default {
   meta: {
     title: "OurColoring — Turn Photos into Coloring Pages",
     description:
-      "Turn any photo into a printable coloring page — your kids, pets, toys, anything! Free, safe processing.",
+      "Turn your child's photos into printable coloring pages in seconds. A4 optimized, free, no login required.",
   },
   nav: {
     home: "Home",
@@ -12,7 +12,8 @@ export default {
   hero: {
     title: "Turn Any Photo into\na Coloring Page",
     subtitle:
-      "Your kids, pets, toys — turn anything into a coloring page in seconds.",
+      "Your child's photos, living room, toys — everything around you becomes a coloring page.",
+    ctaButton: "Start now",
   },
   converter: {
     uploadTitle: "Upload a photo",
