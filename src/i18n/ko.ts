@@ -51,6 +51,7 @@ export default {
     downloadPdf: "PDF 다운로드 (A4)",
     downloadPreparing: "준비 중...",
     limitCounter: "오늘 남은 변환",
+    limitTooltip: "3번 변환 후, 이메일 주소를 남기면 하루 10번까지 무료로 변환할 수 있어요!",
     limitTitle: "오늘의 무료 변환을 모두 사용했어요",
     limitSubtitle:
       "이메일을 남기면 하루 10장까지 이용할 수 있어요!",

@@ -52,6 +52,7 @@ export default {
     downloadPdf: "Download PDF (A4)",
     downloadPreparing: "Preparing...",
     limitCounter: "Remaining today",
+    limitTooltip: "After 3 free conversions, enter your email to get up to 10 per day!",
     limitTitle: "You've used all free conversions for today",
     limitSubtitle:
       "Enter your email to get 10 conversions per day!",

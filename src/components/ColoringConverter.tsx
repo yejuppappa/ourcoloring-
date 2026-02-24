@@ -75,6 +75,7 @@ interface Translations {
   downloadPdf: string;
   downloadPreparing: string;
   limitCounter: string;
+  limitTooltip: string;
   limitTitle: string;
   limitSubtitle: string;
   limitEmailPlaceholder: string;
@@ -336,6 +337,22 @@ export default function ColoringConverter({ t, locale }: Props) {
             {t.limitCounter}:{" "}
             <span className="font-bold text-[#FF6B4A]">
               {limit.remaining}/{limit.total}
+            </span>
+            <span className="relative group">
+              <button
+                type="button"
+                className="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-[#E8DFD6] text-[11px] font-bold text-[#7A7067] transition-colors hover:bg-[#FF6B4A] hover:text-white"
+                onClick={(e) => {
+                  const tip = (e.currentTarget.nextElementSibling as HTMLElement);
+                  tip.classList.toggle("hidden");
+                }}
+              >
+                ?
+              </button>
+              <span className="hidden group-hover:md:block absolute left-1/2 top-full z-50 mt-2 w-56 -translate-x-1/2 rounded-xl bg-[#3D3530] px-4 py-3 text-xs leading-relaxed text-white shadow-lg">
+                {t.limitTooltip}
+                <span className="absolute -top-1 left-1/2 -translate-x-1/2 h-2 w-2 rotate-45 bg-[#3D3530]"></span>
+              </span>
             </span>
           </span>
         </div>
