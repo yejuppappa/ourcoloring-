@@ -1,3 +1,8 @@
+export function isMobile(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
 function triggerDownload(dataUrl: string, filename: string): void {
   const a = document.createElement("a");
   a.href = dataUrl;
@@ -9,6 +14,26 @@ function triggerDownload(dataUrl: string, filename: string): void {
 
 export function downloadPNG(dataUrl: string): void {
   triggerDownload(dataUrl, `ourcoloring_${Date.now()}.png`);
+}
+
+/** Mobile: try Web Share API (shows native share sheet with "Save to Photos"), fallback to download */
+export async function savePNGMobile(dataUrl: string): Promise<void> {
+  try {
+    const res = await fetch(dataUrl);
+    const blob = await res.blob();
+    const file = new File([blob], `ourcoloring_${Date.now()}.png`, {
+      type: "image/png",
+    });
+
+    if (navigator.canShare?.({ files: [file] })) {
+      await navigator.share({ files: [file] });
+      return;
+    }
+  } catch {
+    // Share cancelled or failed — fall through to download
+  }
+
+  downloadPNG(dataUrl);
 }
 
 export async function downloadPDF(dataUrl: string): Promise<void> {
