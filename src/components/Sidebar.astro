@@ -1,0 +1,487 @@
+---
+import { getLocaleFromUrl, t } from "@/i18n";
+
+const locale = getLocaleFromUrl(Astro.url);
+const i18n = t(locale);
+const sb = i18n.sidebar;
+const currentPath = Astro.url.pathname;
+const altLocale = locale === "ko" ? "en" : "ko";
+const altPath = currentPath.replace(`/${locale}`, `/${altLocale}`);
+
+// Determine active category from URL
+const pathParts = currentPath.split("/").filter(Boolean);
+const isGallery = pathParts.length >= 2 && pathParts[1] === "gallery";
+const activeCategory = isGallery && pathParts.length >= 3 ? pathParts[2] : null;
+const isHomePage =
+  currentPath === `/${locale}/` || currentPath === `/${locale}`;
+
+// Check if current path matches
+const isPathActive = (href: string) => {
+  const clean = href.endsWith("/") ? href : href + "/";
+  const cleanCurrent = currentPath.endsWith("/")
+    ? currentPath
+    : currentPath + "/";
+  return cleanCurrent === clean || cleanCurrent.startsWith(clean);
+};
+
+const categories = [
+  {
+    icon: "\u{1F3A8}",
+    label: sb.play,
+    slug: "play",
+    href: `/${locale}/gallery/play/`,
+    subs: [
+      { label: sb.dinosaur, slug: "dinosaur" },
+      { label: sb.animal, slug: "animal" },
+      { label: sb.car, slug: "car" },
+      { label: sb.unicorn, slug: "unicorn" },
+      { label: sb.jobs, slug: "jobs" },
+      { label: sb.seasonal, slug: "seasonal" },
+    ],
+  },
+  {
+    icon: "\u{1F4DA}",
+    label: sb.education,
+    slug: "education",
+    href: `/${locale}/gallery/education/`,
+    subs: [
+      { label: sb.alphabet, slug: "alphabet" },
+      { label: sb.numbers, slug: "numbers" },
+      { label: sb.colorByNumber, slug: "color-by-number" },
+      { label: sb.worldCulture, slug: "world-culture" },
+      { label: sb.namePage, slug: "name" },
+    ],
+  },
+  {
+    icon: "\u{1F9E0}",
+    label: sb.creative,
+    slug: "creative",
+    href: `/${locale}/gallery/creative/`,
+    subs: [
+      { label: sb.nextScene, slug: "next-scene" },
+      { label: sb.halfDrawing, slug: "half-drawing" },
+      { label: sb.characterDesign, slug: "character-design" },
+      { label: sb.myDinosaur, slug: "my-dinosaur" },
+    ],
+  },
+];
+---
+
+<!-- ═══ Mobile Top Bar (< md) ═══ -->
+<div
+  class="fixed top-0 left-0 right-0 h-14 z-40 flex items-center justify-between px-4 bg-white/95 backdrop-blur-sm border-b border-[#F0E6DA] md:hidden"
+>
+  <a href={`/${locale}/`} class="flex items-center gap-2 group">
+    <img
+      src="/favicon.svg"
+      alt=""
+      width="28"
+      height="28"
+      class="shrink-0 transition-transform group-hover:scale-110"
+    />
+    <span
+      class="font-['Nunito'] text-lg font-extrabold text-[#3D3530] tracking-tight"
+      >OurColoring</span
+    >
+  </a>
+  <button
+    id="sidebar-toggle"
+    class="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-[#FFF0E5] transition-colors"
+    aria-label="Menu"
+    aria-expanded="false"
+  >
+    <svg
+      id="sidebar-hamburger"
+      xmlns="http://www.w3.org/2000/svg"
+      class="h-5 w-5 text-[#3D3530]"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      stroke-width="2"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M4 6h16M4 12h16M4 18h16"></path>
+    </svg>
+    <svg
+      id="sidebar-close"
+      xmlns="http://www.w3.org/2000/svg"
+      class="h-5 w-5 text-[#3D3530] hidden"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      stroke-width="2"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M6 18L18 6M6 6l12 12"></path>
+    </svg>
+  </button>
+</div>
+
+<!-- ═══ Mobile Backdrop ═══ -->
+<div
+  id="sidebar-backdrop"
+  class="fixed inset-0 bg-black/30 z-40 hidden md:hidden transition-opacity"
+>
+</div>
+
+<!-- ═══ Sidebar ═══ -->
+<aside
+  id="sidebar"
+  class="sidebar-aside fixed top-0 left-0 h-full z-50 bg-white border-r border-[#F0E6DA] overflow-y-auto overflow-x-hidden flex flex-col"
+>
+  <!-- Logo (visible on tablet/desktop only) -->
+  <div
+    class="hidden md:flex items-center h-14 px-3 gap-2.5 shrink-0 border-b border-[#F0E6DA]"
+  >
+    <a href={`/${locale}/`} class="flex items-center gap-2.5 group">
+      <img
+        src="/favicon.svg"
+        alt=""
+        width="32"
+        height="32"
+        class="shrink-0 transition-transform group-hover:scale-110"
+      />
+      <span
+        class="sb-label font-['Nunito'] text-lg font-extrabold text-[#3D3530] tracking-tight"
+        >OurColoring</span
+      >
+    </a>
+  </div>
+
+  <!-- Mobile: add top padding so content doesn't hide behind mobile bar -->
+  <div class="h-14 shrink-0 md:hidden"></div>
+
+  <!-- Navigation -->
+  <nav class="flex-1 py-3 px-2">
+    <!-- Home -->
+    <a
+      href={`/${locale}/`}
+      class:list={[
+        "sb-item flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors",
+        isHomePage
+          ? "bg-[#FFF0E5] text-[#FF6B4A] font-semibold"
+          : "text-[#5A524B] hover:bg-[#FFF7F2]",
+      ]}
+    >
+      <span class="text-lg shrink-0 w-7 text-center">{"\u{1F3E0}"}</span>
+      <span class="sb-label text-sm">{sb.home}</span>
+    </a>
+
+    <!-- Gallery Section Label -->
+    <div class="mt-4 mb-2 px-3">
+      <span
+        class="sb-label text-[10px] font-bold uppercase tracking-wider text-[#B0A89F]"
+        >{sb.gallerySection}</span
+      >
+    </div>
+
+    <!-- Gallery landing link -->
+    <a
+      href={`/${locale}/gallery/`}
+      class:list={[
+        "sb-item flex items-center gap-3 px-3 py-2 rounded-xl transition-colors text-sm mb-1",
+        isGallery && !activeCategory
+          ? "bg-[#FFF0E5] text-[#FF6B4A] font-semibold"
+          : "text-[#5A524B] hover:bg-[#FFF7F2]",
+      ]}
+    >
+      <span class="shrink-0 w-7 text-center">
+        <svg
+          class="w-4 h-4 inline-block"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+          ></path>
+        </svg>
+      </span>
+      <span class="sb-label">{i18n.gallery.allCategories}</span>
+    </a>
+
+    <!-- Categories with accordion subcategories -->
+    {
+      categories.map((cat) => {
+        const isCatActive = activeCategory === cat.slug;
+
+        return (
+          <div class="mb-0.5">
+            {/* Category header row */}
+            <div class="flex items-center">
+              <a
+                href={cat.href}
+                class:list={[
+                  "sb-item flex-1 flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors",
+                  isCatActive
+                    ? "bg-[#FFF0E5] text-[#FF6B4A] font-semibold"
+                    : "text-[#5A524B] hover:bg-[#FFF7F2]",
+                ]}
+              >
+                <span class="text-lg shrink-0 w-7 text-center">{cat.icon}</span>
+                <span class="sb-label text-sm flex-1">{cat.label}</span>
+              </a>
+              <button
+                class="sb-label sb-toggle shrink-0 w-7 h-7 flex items-center justify-center rounded-lg hover:bg-[#FFF0E5] text-[#A09890] transition-colors mr-1"
+                data-target={`sub-${cat.slug}`}
+                aria-expanded={isCatActive ? "true" : "false"}
+              >
+                <svg
+                  class:list={[
+                    "w-3.5 h-3.5 transition-transform duration-200",
+                    isCatActive && "rotate-180",
+                  ]}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* Subcategory list */}
+            <div
+              id={`sub-${cat.slug}`}
+              class:list={[
+                "sb-sub overflow-hidden transition-all duration-200",
+                !isCatActive && "hidden",
+              ]}
+            >
+              <div class="pl-5 py-1">
+                {cat.subs.map((sub) => {
+                  const subHref = `/${locale}/gallery/${cat.slug}/${sub.slug}/`;
+                  return (
+                    <a
+                      href={subHref}
+                      class:list={[
+                        "sb-item flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-[13px] transition-colors",
+                        isPathActive(subHref)
+                          ? "text-[#FF6B4A] font-semibold bg-[#FFF7F2]"
+                          : "text-[#7A7067] hover:text-[#5A524B] hover:bg-[#FFFAF5]",
+                      ]}
+                    >
+                      <span class="w-1 h-1 rounded-full bg-current shrink-0 opacity-40" />
+                      <span class="sb-label">{sub.label}</span>
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        );
+      })
+    }
+
+    <!-- Divider -->
+    <div class="my-3 mx-3 border-t border-[#F0E6DA]"></div>
+
+    <!-- Tools Section Label -->
+    <div class="mb-2 px-3">
+      <span
+        class="sb-label text-[10px] font-bold uppercase tracking-wider text-[#B0A89F]"
+        >{sb.toolsSection}</span
+      >
+    </div>
+
+    <!-- Photo Convert -->
+    <a
+      href={`/${locale}/#converter`}
+      class="sb-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#5A524B] hover:bg-[#FFF7F2] transition-colors"
+    >
+      <span class="text-lg shrink-0 w-7 text-center">{"\u{1F4F7}"}</span>
+      <span class="sb-label text-sm">{sb.photoConvert}</span>
+    </a>
+
+    <!-- Print Guide -->
+    <a
+      href={`/${locale}/how-to-print/`}
+      class:list={[
+        "sb-item flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors",
+        isPathActive(`/${locale}/how-to-print/`)
+          ? "bg-[#FFF0E5] text-[#FF6B4A] font-semibold"
+          : "text-[#5A524B] hover:bg-[#FFF7F2]",
+      ]}
+    >
+      <span class="text-lg shrink-0 w-7 text-center">{"\u{1F5A8}\u{FE0F}"}</span>
+      <span class="sb-label text-sm">{sb.printGuide}</span>
+    </a>
+  </nav>
+
+  <!-- Bottom: Language Switcher -->
+  <div class="shrink-0 px-2 pb-4 pt-2 border-t border-[#F0E6DA]">
+    <a
+      href={altPath}
+      class="sb-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#A09890] hover:bg-[#FFF7F2] hover:text-[#3D3530] transition-colors"
+    >
+      <span class="text-lg shrink-0 w-7 text-center">{"\u{1F310}"}</span>
+      <span class="sb-label text-sm"
+        >{altLocale === "ko" ? "\uD55C\uAD6D\uC5B4" : "English"}</span
+      >
+    </a>
+  </div>
+</aside>
+
+<style>
+  /* ═══ Sidebar Responsive Behavior ═══ */
+  .sidebar-aside {
+    transition:
+      transform 300ms ease,
+      width 200ms ease;
+  }
+
+  /* Mobile: hidden off-screen */
+  @media (max-width: 767px) {
+    .sidebar-aside {
+      width: 280px;
+      transform: translateX(-100%);
+    }
+    .sidebar-aside.open {
+      transform: translateX(0);
+    }
+  }
+
+  /* Tablet: collapsed (icons only), expand on hover */
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .sidebar-aside {
+      width: 64px;
+    }
+    .sidebar-aside:hover {
+      width: 240px;
+      box-shadow: 4px 0 24px rgba(0, 0, 0, 0.08);
+    }
+    .sidebar-aside .sb-label {
+      opacity: 0;
+      width: 0;
+      overflow: hidden;
+      transition: opacity 150ms ease;
+    }
+    .sidebar-aside:hover .sb-label {
+      opacity: 1;
+      width: auto;
+    }
+    .sidebar-aside .sb-sub {
+      display: none !important;
+    }
+    .sidebar-aside:hover .sb-sub:not(.hidden) {
+      display: block !important;
+    }
+  }
+
+  /* Desktop: always expanded */
+  @media (min-width: 1024px) {
+    .sidebar-aside {
+      width: 240px;
+    }
+  }
+
+  /* ═══ Shared Styles ═══ */
+  .sb-label {
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  .sb-item {
+    min-height: 40px;
+  }
+
+  /* Scrollbar styling */
+  .sidebar-aside::-webkit-scrollbar {
+    width: 4px;
+  }
+  .sidebar-aside::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .sidebar-aside::-webkit-scrollbar-thumb {
+    background: #e8dfd6;
+    border-radius: 2px;
+  }
+  .sidebar-aside:hover::-webkit-scrollbar-thumb {
+    background: #d4c8be;
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    var toggle = document.getElementById("sidebar-toggle");
+    var sidebar = document.getElementById("sidebar");
+    var backdrop = document.getElementById("sidebar-backdrop");
+    var hamburger = document.getElementById("sidebar-hamburger");
+    var closeIcon = document.getElementById("sidebar-close");
+
+    function openSidebar() {
+      sidebar.classList.add("open");
+      backdrop.classList.remove("hidden");
+      hamburger.classList.add("hidden");
+      closeIcon.classList.remove("hidden");
+      toggle.setAttribute("aria-expanded", "true");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeSidebar() {
+      sidebar.classList.remove("open");
+      backdrop.classList.add("hidden");
+      hamburger.classList.remove("hidden");
+      closeIcon.classList.add("hidden");
+      toggle.setAttribute("aria-expanded", "false");
+      document.body.style.overflow = "";
+    }
+
+    if (toggle) {
+      toggle.addEventListener("click", function () {
+        if (sidebar.classList.contains("open")) {
+          closeSidebar();
+        } else {
+          openSidebar();
+        }
+      });
+    }
+
+    if (backdrop) {
+      backdrop.addEventListener("click", closeSidebar);
+    }
+
+    // Close sidebar on link click (mobile only)
+    if (sidebar) {
+      sidebar.querySelectorAll("a").forEach(function (link) {
+        link.addEventListener("click", function () {
+          if (window.innerWidth < 768) {
+            closeSidebar();
+          }
+        });
+      });
+    }
+
+    // Subcategory accordion toggles
+    document.querySelectorAll(".sb-toggle").forEach(function (btn) {
+      btn.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var targetId = btn.getAttribute("data-target");
+        var target = document.getElementById(targetId);
+        if (!target) return;
+
+        var isHidden = target.classList.contains("hidden");
+        target.classList.toggle("hidden");
+
+        var arrow = btn.querySelector("svg");
+        if (arrow) {
+          arrow.classList.toggle("rotate-180");
+        }
+        btn.setAttribute("aria-expanded", isHidden ? "true" : "false");
+      });
+    });
+  })();
+</script>

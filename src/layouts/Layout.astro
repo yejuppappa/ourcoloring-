@@ -1,19 +1,19 @@
 ---
 import "@/styles/global.css";
 import { getLocaleFromUrl, t } from "@/i18n";
-import Header from "@/components/Header.astro";
+import Sidebar from "@/components/Sidebar.astro";
 import Footer from "@/components/Footer.astro";
 
 interface Props {
   title?: string;
   description?: string;
-  noHeader?: boolean;
+  noSidebar?: boolean;
   noFooter?: boolean;
 }
 
 const locale = getLocaleFromUrl(Astro.url);
 const i18n = t(locale);
-const { title = i18n.meta.title, description = i18n.meta.description, noHeader = false, noFooter = false } =
+const { title = i18n.meta.title, description = i18n.meta.description, noSidebar = false, noFooter = false } =
   Astro.props;
 
 const altLocale = locale === "ko" ? "en" : "ko";
@@ -61,6 +61,10 @@ const structuredData = {
       .converter-skeleton-icon{width:48px;height:48px;margin:0 auto;border-radius:50%;background:#FFF0E5}
       .converter-skeleton-bar{height:14px;border-radius:7px;background:#F0EAE3;margin:16px auto 0;width:60%}
       .converter-skeleton-bar.short{width:40%;margin-top:8px}
+      /* Sidebar content area responsive margins */
+      @media(max-width:767px){.sidebar-content{padding-top:56px}}
+      @media(min-width:768px) and (max-width:1023px){.sidebar-content{margin-left:64px}}
+      @media(min-width:1024px){.sidebar-content{margin-left:240px}}
     </style>
 
     <link rel="canonical" href={canonicalUrl} />
@@ -129,11 +133,15 @@ const structuredData = {
       <div class="splash-dot"><span></span><span></span><span></span></div>
     </div>
 
-    {!noHeader && <Header />}
+    {!noSidebar && <Sidebar />}
 
-    <slot />
+    <div class:list={["min-h-screen flex flex-col", !noSidebar && "sidebar-content"]}>
+      <div class="flex-1">
+        <slot />
+      </div>
 
-    {!noFooter && <Footer />}
+      {!noFooter && <Footer />}
+    </div>
 
     <script is:inline>
       // Hide splash as soon as main content is painted
