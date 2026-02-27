@@ -1,0 +1,17 @@
+---
+export const prerender = false;
+
+import AdminLayout from "@/layouts/AdminLayout.astro";
+---
+
+<AdminLayout title="Admin — OurColoring">
+  <div id="admin-root"></div>
+  <script>
+    import { createElement } from "react";
+    import { createRoot } from "react-dom/client";
+    import AdminApp from "@/components/admin/AdminApp";
+
+    const root = createRoot(document.getElementById("admin-root")!);
+    root.render(createElement(AdminApp));
+  </script>
+</AdminLayout>

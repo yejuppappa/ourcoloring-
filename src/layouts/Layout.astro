@@ -1,15 +1,19 @@
 ---
 import "@/styles/global.css";
 import { getLocaleFromUrl, t } from "@/i18n";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
 
 interface Props {
   title?: string;
   description?: string;
+  noHeader?: boolean;
+  noFooter?: boolean;
 }
 
 const locale = getLocaleFromUrl(Astro.url);
 const i18n = t(locale);
-const { title = i18n.meta.title, description = i18n.meta.description } =
+const { title = i18n.meta.title, description = i18n.meta.description, noHeader = false, noFooter = false } =
   Astro.props;
 
 const altLocale = locale === "ko" ? "en" : "ko";
@@ -125,17 +129,11 @@ const structuredData = {
       <div class="splash-dot"><span></span><span></span><span></span></div>
     </div>
 
-    <!-- Site Header -->
-    <header class="bg-[#FFF9F0]/80 backdrop-blur-sm border-b border-[#F0E6DA]">
-      <div class="mx-auto max-w-2xl px-4 py-3">
-        <a href={`/${locale}/`} class="inline-flex items-center gap-2.5 group">
-          <img src="/favicon.svg" alt="" width="36" height="36" class="shrink-0 relative -top-[3px] transition-transform group-hover:scale-110" />
-          <span class="font-['Nunito'] text-xl font-extrabold text-[#3D3530] tracking-tight leading-none">OurColoring</span>
-        </a>
-      </div>
-    </header>
+    {!noHeader && <Header />}
 
     <slot />
+
+    {!noFooter && <Footer />}
 
     <script is:inline>
       // Hide splash as soon as main content is painted

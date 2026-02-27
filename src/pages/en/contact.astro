@@ -1,0 +1,48 @@
+---
+export const prerender = true;
+
+import Layout from "@/layouts/Layout.astro";
+---
+
+<Layout title="Contact Us | OurColoring" description="Contact OurColoring">
+  <main class="mx-auto max-w-3xl px-4 py-12">
+    <h1 class="font-['Nunito'] text-3xl font-extrabold text-[#3D3530] mb-4">Contact Us</h1>
+    <p class="text-[#7A7067] mb-8">Questions, suggestions, or issues? We'd love to hear from you.</p>
+
+    <div class="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-[#E8DFD6]">
+      <div class="space-y-6">
+        <div>
+          <h2 class="text-lg font-bold text-[#3D3530] mb-3">Email Us</h2>
+          <a
+            href="mailto:contact@ourcoloring.com"
+            class="inline-flex items-center gap-2 text-[#FF6B4A] font-medium hover:underline"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+              <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+            </svg>
+            contact@ourcoloring.com
+          </a>
+        </div>
+
+        <div class="border-t border-[#E8DFD6] pt-6">
+          <h2 class="text-lg font-bold text-[#3D3530] mb-3">FAQ</h2>
+          <div class="space-y-4">
+            <div>
+              <h3 class="font-medium text-[#3D3530]">The conversion quality isn't great.</h3>
+              <p class="mt-1 text-sm text-[#7A7067]">Higher resolution photos produce better results. Try using bright, clear photos.</p>
+            </div>
+            <div>
+              <h3 class="font-medium text-[#3D3530]">How many conversions can I do per day?</h3>
+              <p class="mt-1 text-sm text-[#7A7067]">3 free per day, or 10 with email registration. Resets at midnight.</p>
+            </div>
+            <div>
+              <h3 class="font-medium text-[#3D3530]">Are gallery coloring pages free?</h3>
+              <p class="mt-1 text-sm text-[#7A7067]">Yes! Gallery pages have unlimited free downloads. Use them freely at home or school.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</Layout>

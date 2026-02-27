@@ -1,4 +1,6 @@
 ---
+export const prerender = true;
+
 import Layout from "@/layouts/Layout.astro";
 import ColoringConverter from "@/components/ColoringConverter";
 import { t } from "@/i18n";
@@ -69,12 +71,20 @@ const l = i18n.landing;
 
         <!-- CTA + benefit -->
         <div class="mt-8 flex flex-col items-center gap-5 animate-fade-in-up delay-300">
-          <a
-            href="#converter"
-            class="inline-block rounded-2xl bg-gradient-to-r from-[#FF6B4A] to-[#FF8F6B] px-10 py-4 text-lg font-bold text-white shadow-lg shadow-[#FF6B4A]/25 transition-all hover:scale-105 hover:shadow-xl active:scale-95"
-          >
-            {i18n.hero.ctaButton}
-          </a>
+          <div class="flex flex-col sm:flex-row gap-3">
+            <a
+              href="/ko/gallery/"
+              class="inline-block rounded-2xl bg-gradient-to-r from-[#FF6B4A] to-[#FF8F6B] px-8 py-3.5 text-lg font-bold text-white shadow-lg shadow-[#FF6B4A]/25 transition-all hover:scale-105 hover:shadow-xl active:scale-95"
+            >
+              {i18n.hero.ctaGallery}
+            </a>
+            <a
+              href="#converter"
+              class="inline-block rounded-2xl border-2 border-[#FF6B4A] px-8 py-3.5 text-lg font-bold text-[#FF6B4A] transition-all hover:bg-[#FFF0E5] active:scale-95"
+            >
+              {i18n.hero.ctaConvert}
+            </a>
+          </div>
           <div class="inline-flex items-center gap-2 rounded-full bg-[#E8F5E9]/80 px-4 py-2 text-sm font-medium text-[#2E7D32]">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
@@ -95,6 +105,31 @@ const l = i18n.landing;
         </div>
       </div>
       <ColoringConverter client:load t={i18n.converter} locale="ko" />
+    </section>
+
+    <!-- ═══ Category Showcase ═══ -->
+    <section class="mx-auto max-w-6xl px-4 mt-16">
+      <h2 class="font-['Nunito'] text-2xl font-bold text-[#3D3530] text-center mb-8">{l.categoryTitle}</h2>
+      <div class="grid grid-cols-1 gap-5 sm:grid-cols-3">
+        <a href="/ko/gallery/play/" class="group block rounded-2xl bg-white p-6 shadow-sm ring-1 ring-[#E8DFD6] transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
+          <div class="text-4xl mb-3">🎨</div>
+          <h3 class="text-lg font-bold text-[#3D3530] group-hover:text-[#FF6B4A] transition-colors">{i18n.gallery.categoryPlay}</h3>
+          <p class="mt-2 text-sm text-[#7A7067]">{i18n.gallery.categoryPlayDesc}</p>
+          <span class="mt-3 inline-block text-sm font-medium text-[#FF6B4A]">{i18n.gallery.viewAll} →</span>
+        </a>
+        <a href="/ko/gallery/education/" class="group block rounded-2xl bg-white p-6 shadow-sm ring-1 ring-[#E8DFD6] transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
+          <div class="text-4xl mb-3">📚</div>
+          <h3 class="text-lg font-bold text-[#3D3530] group-hover:text-[#FF6B4A] transition-colors">{i18n.gallery.categoryEducation}</h3>
+          <p class="mt-2 text-sm text-[#7A7067]">{i18n.gallery.categoryEducationDesc}</p>
+          <span class="mt-3 inline-block text-sm font-medium text-[#FF6B4A]">{i18n.gallery.viewAll} →</span>
+        </a>
+        <a href="/ko/gallery/creative/" class="group block rounded-2xl bg-white p-6 shadow-sm ring-1 ring-[#E8DFD6] transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
+          <div class="text-4xl mb-3">🧠</div>
+          <h3 class="text-lg font-bold text-[#3D3530] group-hover:text-[#FF6B4A] transition-colors">{i18n.gallery.categoryCreative}</h3>
+          <p class="mt-2 text-sm text-[#7A7067]">{i18n.gallery.categoryCreativeDesc}</p>
+          <span class="mt-3 inline-block text-sm font-medium text-[#FF6B4A]">{i18n.gallery.viewAll} →</span>
+        </a>
+      </div>
     </section>
 
     <div class="mx-auto max-w-2xl px-4">
@@ -188,34 +223,22 @@ const l = i18n.landing;
         <h2 class="font-['Nunito'] text-xl font-bold text-[#3D3530]">
           {l.ctaTitle}
         </h2>
-        <p class="mx-auto mt-2 max-w-sm text-sm text-[#7A7067]">
-          직접 찍은 사진으로 더 재미있는 색칠공부를 만들 수 있어요
-        </p>
-        <a
-          href="#converter"
-          class="mt-5 inline-block rounded-2xl bg-gradient-to-r from-[#FF6B4A] to-[#FF8F6B] px-8 py-3.5 font-bold text-white shadow-lg shadow-[#FF6B4A]/25 transition-all hover:scale-105 hover:shadow-xl active:scale-95"
-        >
-          {l.ctaButton}
-        </a>
+        <div class="mt-5 flex flex-col sm:flex-row items-center justify-center gap-3">
+          <a
+            href="/ko/gallery/"
+            class="inline-block rounded-2xl bg-gradient-to-r from-[#FF6B4A] to-[#FF8F6B] px-8 py-3.5 font-bold text-white shadow-lg shadow-[#FF6B4A]/25 transition-all hover:scale-105 hover:shadow-xl active:scale-95"
+          >
+            {l.ctaGallery}
+          </a>
+          <a
+            href="#converter"
+            class="inline-block rounded-2xl border-2 border-[#FF6B4A] px-8 py-3.5 font-bold text-[#FF6B4A] transition-all hover:bg-[#FFF0E5] active:scale-95"
+          >
+            {l.ctaButton}
+          </a>
+        </div>
       </section>
     </div>
   </main>
 
-  <!-- Footer -->
-  <footer
-    class="border-t border-[#E8DFD6] bg-white/60 py-8 text-center text-sm text-[#A09890]"
-  >
-    <div class="mx-auto flex max-w-2xl flex-col items-center gap-3 px-4">
-      <div class="flex gap-4">
-        <a
-          href="/ko/how-to-print/"
-          class="underline hover:text-[#3D3530]"
-        >
-          {i18n.footer.printGuide}
-        </a>
-        <a href="/en/" class="underline hover:text-[#3D3530]">English</a>
-      </div>
-      <p>{i18n.footer.copyright}</p>
-    </div>
-  </footer>
 </Layout>

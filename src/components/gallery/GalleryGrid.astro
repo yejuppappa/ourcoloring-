@@ -1,0 +1,10 @@
+---
+/**
+ * Responsive grid wrapper for gallery items.
+ * Renders children in a responsive CSS grid: 2 → 3 → 4 → 6 columns.
+ */
+---
+
+<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+  <slot />
+</div>

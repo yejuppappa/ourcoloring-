@@ -1,0 +1,75 @@
+---
+export const prerender = true;
+
+import Layout from "@/layouts/Layout.astro";
+---
+
+<Layout title="소개 | OurColoring" description="OurColoring — 색칠하면서 놀고, 배우고, 만든다">
+  <main class="mx-auto max-w-3xl px-4 py-12">
+    <h1 class="font-['Nunito'] text-3xl font-extrabold text-[#3D3530] mb-4">OurColoring 소개</h1>
+    <p class="text-lg text-[#5A524B] mb-10">색칠하면서 놀고, 배우고, 만든다.</p>
+
+    <div class="space-y-10">
+      <!-- What -->
+      <section class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-[#E8DFD6]">
+        <h2 class="text-xl font-bold text-[#3D3530] mb-4">무엇을 하는 서비스인가요?</h2>
+        <p class="text-sm text-[#5A524B] leading-relaxed">
+          OurColoring은 아이들을 위한 종합 색칠공부 플랫폼입니다. 다양한 무료 색칠 도안을 다운로드하고, 내 사진을 색칠도안으로 변환할 수 있습니다. 프린트해서 아이와 함께 즐거운 색칠 시간을 보내세요!
+        </p>
+      </section>
+
+      <!-- 3 pillars -->
+      <section>
+        <h2 class="text-xl font-bold text-[#3D3530] mb-6">3가지 도안 카테고리</h2>
+        <div class="grid gap-4 sm:grid-cols-3">
+          <div class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-[#E8DFD6]">
+            <div class="text-3xl mb-3">🎨</div>
+            <h3 class="font-bold text-[#3D3530]">놀이 도안</h3>
+            <p class="mt-2 text-sm text-[#7A7067]">공룡, 동물, 자동차, 유니콘 등 아이들이 좋아하는 인기 주제의 색칠 도안</p>
+          </div>
+          <div class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-[#E8DFD6]">
+            <div class="text-3xl mb-3">📚</div>
+            <h3 class="font-bold text-[#3D3530]">교육 도안</h3>
+            <p class="mt-2 text-sm text-[#7A7067]">알파벳, 숫자, 세계 문화 등 색칠하면서 자연스럽게 배우는 교육 도안</p>
+          </div>
+          <div class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-[#E8DFD6]">
+            <div class="text-3xl mb-3">🧠</div>
+            <h3 class="font-bold text-[#3D3530]">창의 도안</h3>
+            <p class="mt-2 text-sm text-[#7A7067]">다음 장면 그리기, 반쪽 완성 등 상상력을 키우는 창의 활동 도안</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Photo conversion -->
+      <section class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-[#E8DFD6]">
+        <h2 class="text-xl font-bold text-[#3D3530] mb-4">사진→색칠도안 변환</h2>
+        <p class="text-sm text-[#5A524B] leading-relaxed">
+          우리 아이 사진, 반려동물, 장난감 — 어떤 사진이든 색칠도안으로 변환할 수 있습니다. 3가지 배경 모드와 3단계 난이도를 선택해서 아이의 연령에 맞는 도안을 만들어 보세요.
+        </p>
+      </section>
+
+      <!-- Why -->
+      <section class="rounded-2xl bg-gradient-to-br from-[#FFF0E5] to-[#FFF9F0] p-6 ring-1 ring-[#E8DFD6]">
+        <h2 class="text-xl font-bold text-[#3D3530] mb-4">왜 OurColoring인가요?</h2>
+        <ul class="space-y-3 text-sm text-[#5A524B]">
+          <li class="flex items-start gap-3">
+            <span class="text-[#FF6B4A] font-bold mt-0.5">✓</span>
+            <span><strong>완전 무료</strong> — 갤러리 도안 무제한, 사진 변환 하루 3회 무료</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="text-[#FF6B4A] font-bold mt-0.5">✓</span>
+            <span><strong>로그인 불필요</strong> — 앱 설치 없이, 계정 없이 바로 사용</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="text-[#FF6B4A] font-bold mt-0.5">✓</span>
+            <span><strong>프린트 최적화</strong> — A4 PDF로 바로 프린트 가능</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="text-[#FF6B4A] font-bold mt-0.5">✓</span>
+            <span><strong>프라이버시 보호</strong> — 업로드된 사진은 변환 후 즉시 삭제</span>
+          </li>
+        </ul>
+      </section>
+    </div>
+  </main>
+</Layout>

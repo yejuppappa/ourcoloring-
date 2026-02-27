@@ -1,0 +1,68 @@
+---
+export const prerender = true;
+
+import Layout from "@/layouts/Layout.astro";
+---
+
+<Layout title="Privacy Policy | OurColoring" description="OurColoring Privacy Policy">
+  <main class="mx-auto max-w-3xl px-4 py-12">
+    <h1 class="font-['Nunito'] text-3xl font-extrabold text-[#3D3530] mb-8">Privacy Policy</h1>
+
+    <div class="prose prose-gray max-w-none space-y-8 text-[#5A524B] text-sm leading-relaxed">
+      <p>Last updated: February 28, 2026</p>
+
+      <section>
+        <h2 class="text-lg font-bold text-[#3D3530] mt-8 mb-3">1. Information We Collect</h2>
+        <p>OurColoring ("the Service") collects minimal information.</p>
+        <ul class="list-disc pl-6 space-y-1">
+          <li><strong>Photo files:</strong> Photos uploaded for coloring page conversion are used only for processing and are never stored on our servers. They are deleted immediately after conversion.</li>
+          <li><strong>Email address:</strong> Collected only if you voluntarily provide it to extend your daily conversion limit.</li>
+          <li><strong>Cookies and analytics:</strong> With your consent, we collect anonymized usage data through Google Analytics 4 (GA4) and Microsoft Clarity.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 class="text-lg font-bold text-[#3D3530] mt-8 mb-3">2. How We Use Information</h2>
+        <ul class="list-disc pl-6 space-y-1">
+          <li>To provide the photo-to-coloring-page conversion service</li>
+          <li>To analyze usage and improve the service</li>
+          <li>To manage daily usage limits</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 class="text-lg font-bold text-[#3D3530] mt-8 mb-3">3. Data Retention</h2>
+        <ul class="list-disc pl-6 space-y-1">
+          <li>Uploaded photos: Deleted immediately after conversion (no server storage)</li>
+          <li>Email: Retained until purpose is fulfilled, then promptly deleted</li>
+          <li>Cookies: Can be managed through your browser settings</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 class="text-lg font-bold text-[#3D3530] mt-8 mb-3">4. Third-Party Services</h2>
+        <ul class="list-disc pl-6 space-y-1">
+          <li><strong>xAI (Grok API):</strong> Used for image conversion. Transmitted images are deleted after processing.</li>
+          <li><strong>Google Analytics 4:</strong> Collects anonymized usage statistics.</li>
+          <li><strong>Microsoft Clarity:</strong> Collects anonymized session data for UX improvement.</li>
+          <li><strong>Cloudflare:</strong> Used for hosting and content delivery.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 class="text-lg font-bold text-[#3D3530] mt-8 mb-3">5. Your Rights</h2>
+        <p>You may withdraw cookie consent or request email deletion at any time. Please use the <a href="/en/contact/" class="text-[#FF6B4A] hover:underline">Contact</a> page for inquiries.</p>
+      </section>
+
+      <section>
+        <h2 class="text-lg font-bold text-[#3D3530] mt-8 mb-3">6. Children's Privacy</h2>
+        <p>This service is intended to be used by parents/guardians for their children. If a child under 13 provides personal information, parental consent is required.</p>
+      </section>
+
+      <section>
+        <h2 class="text-lg font-bold text-[#3D3530] mt-8 mb-3">7. Contact</h2>
+        <p>For privacy inquiries: <a href="/en/contact/" class="text-[#FF6B4A] hover:underline">Contact Us</a></p>
+      </section>
+    </div>
+  </main>
+</Layout>

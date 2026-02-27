@@ -1,56 +1,37 @@
-import {
-  loadAndPrepare,
-  processWithSettings,
-} from "./edge-detection";
-
 export type BackgroundMode = "keep" | "remove" | "create";
 export type Difficulty = "high" | "medium" | "low";
 
 /**
- * Convert a photo to a coloring page.
- *
- * 1. Tries /api/convert (Cloudflare Function → Grok API).
- * 2. If the endpoint returns { mock: true } or is unreachable,
- *    falls back to client-side edge detection.
- *
+ * Convert a photo to a coloring page via /api/convert (Cloudflare Function → Grok API).
  * Returns a data URL of the coloring page image.
  */
 export async function convertImage(
   file: File,
-  _mode: BackgroundMode,
-  _difficulty: Difficulty,
+  mode: BackgroundMode,
+  difficulty: Difficulty,
 ): Promise<string> {
-  // Try server-side API first
-  try {
-    const base64 = await fileToBase64(file, 1536);
+  const base64 = await fileToBase64(file, 1536);
 
-    const res = await fetch("/api/convert", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        image: base64,
-        mode: _mode,
-        difficulty: _difficulty,
-      }),
-    });
+  const res = await fetch("/api/convert", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ image: base64, mode, difficulty }),
+  });
 
-    if (res.ok) {
-      const data = await res.json();
-      if (!data.mock && data.imageUrl) {
-        return data.imageUrl;
-      }
-    }
-  } catch {
-    // API not available — fall through to mock
+  if (!res.ok) {
+    throw new Error(`Conversion failed: ${res.status}`);
   }
 
-  // Mock fallback: client-side edge detection
-  const cache = await loadAndPrepare(file);
-  return processWithSettings(cache, { sensitivity: 50, thickness: 2 });
+  const data = await res.json();
+  if (data.mock || !data.imageUrl) {
+    throw new Error("API key not configured");
+  }
+
+  return data.imageUrl;
 }
 
 /**
- * Create a preview URL for the uploaded file (for the options screen).
+ * Create a preview URL for the uploaded file.
  */
 export function createPreviewUrl(file: File): string {
   return URL.createObjectURL(file);

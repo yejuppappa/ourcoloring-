@@ -1,0 +1,54 @@
+---
+import { getLocaleFromUrl, t } from "@/i18n";
+
+const locale = getLocaleFromUrl(Astro.url);
+const i18n = t(locale);
+const f = i18n.footer;
+---
+
+<footer class="border-t border-[#E8DFD6] bg-white/60 py-10">
+  <div class="mx-auto max-w-6xl px-4">
+    <div class="grid grid-cols-1 gap-8 sm:grid-cols-3">
+      <!-- Brand -->
+      <div>
+        <a href={`/${locale}/`} class="inline-flex items-center gap-2">
+          <img src="/favicon.svg" alt="" width="28" height="28" class="shrink-0" />
+          <span class="font-['Nunito'] text-lg font-extrabold text-[#3D3530]">OurColoring</span>
+        </a>
+        <p class="mt-2 text-sm text-[#A09890]">{f.tagline}</p>
+      </div>
+
+      <!-- Navigation -->
+      <div>
+        <h3 class="text-sm font-semibold text-[#3D3530] mb-3">{i18n.nav.home}</h3>
+        <nav class="flex flex-col gap-2">
+          <a href={`/${locale}/gallery/`} class="text-sm text-[#7A7067] hover:text-[#FF6B4A] transition-colors">{f.gallery}</a>
+          <a href={`/${locale}/#converter`} class="text-sm text-[#7A7067] hover:text-[#FF6B4A] transition-colors">{f.convert}</a>
+          <a href={`/${locale}/how-to-print/`} class="text-sm text-[#7A7067] hover:text-[#FF6B4A] transition-colors">{f.printGuide}</a>
+          <a href={`/${locale}/about/`} class="text-sm text-[#7A7067] hover:text-[#FF6B4A] transition-colors">{f.about}</a>
+        </nav>
+      </div>
+
+      <!-- Legal -->
+      <div>
+        <h3 class="text-sm font-semibold text-[#3D3530] mb-3">{locale === "ko" ? "법적 고지" : "Legal"}</h3>
+        <nav class="flex flex-col gap-2">
+          <a href={`/${locale}/privacy/`} class="text-sm text-[#7A7067] hover:text-[#FF6B4A] transition-colors">{f.privacy}</a>
+          <a href={`/${locale}/terms/`} class="text-sm text-[#7A7067] hover:text-[#FF6B4A] transition-colors">{f.terms}</a>
+          <a href={`/${locale}/contact/`} class="text-sm text-[#7A7067] hover:text-[#FF6B4A] transition-colors">{f.contact}</a>
+        </nav>
+      </div>
+    </div>
+
+    <!-- Bottom -->
+    <div class="mt-8 pt-6 border-t border-[#E8DFD6] flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p class="text-sm text-[#A09890]">{f.copyright}</p>
+      <a
+        href={locale === "ko" ? "/en/" : "/ko/"}
+        class="text-sm text-[#A09890] hover:text-[#3D3530] transition-colors"
+      >
+        {locale === "ko" ? "English" : "한국어"}
+      </a>
+    </div>
+  </div>
+</footer>

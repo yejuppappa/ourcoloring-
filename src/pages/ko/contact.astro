@@ -1,0 +1,48 @@
+---
+export const prerender = true;
+
+import Layout from "@/layouts/Layout.astro";
+---
+
+<Layout title="문의하기 | OurColoring" description="OurColoring에 문의하기">
+  <main class="mx-auto max-w-3xl px-4 py-12">
+    <h1 class="font-['Nunito'] text-3xl font-extrabold text-[#3D3530] mb-4">문의하기</h1>
+    <p class="text-[#7A7067] mb-8">서비스 관련 문의, 제안, 문제 신고 등 무엇이든 보내주세요.</p>
+
+    <div class="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-[#E8DFD6]">
+      <div class="space-y-6">
+        <div>
+          <h2 class="text-lg font-bold text-[#3D3530] mb-3">이메일로 문의하기</h2>
+          <a
+            href="mailto:contact@ourcoloring.com"
+            class="inline-flex items-center gap-2 text-[#FF6B4A] font-medium hover:underline"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+              <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+            </svg>
+            contact@ourcoloring.com
+          </a>
+        </div>
+
+        <div class="border-t border-[#E8DFD6] pt-6">
+          <h2 class="text-lg font-bold text-[#3D3530] mb-3">자주 묻는 질문</h2>
+          <div class="space-y-4">
+            <div>
+              <h3 class="font-medium text-[#3D3530]">변환된 도안의 품질이 좋지 않아요.</h3>
+              <p class="mt-1 text-sm text-[#7A7067]">원본 사진의 해상도가 높을수록 결과가 좋습니다. 밝고 선명한 사진을 사용해 보세요.</p>
+            </div>
+            <div>
+              <h3 class="font-medium text-[#3D3530]">하루에 몇 번까지 변환할 수 있나요?</h3>
+              <p class="mt-1 text-sm text-[#7A7067]">기본 3회, 이메일 등록 시 10회까지 무료입니다. 자정에 초기화됩니다.</p>
+            </div>
+            <div>
+              <h3 class="font-medium text-[#3D3530]">갤러리 도안은 무료인가요?</h3>
+              <p class="mt-1 text-sm text-[#7A7067]">네, 갤러리 도안은 무제한 무료 다운로드입니다. 가정이나 학교에서 자유롭게 사용하세요.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</Layout>

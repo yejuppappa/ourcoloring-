@@ -1,0 +1,21 @@
+name = "ourcoloring"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+SITE_URL = "https://ourcoloring.com"
+
+# D1 Database
+[[d1_databases]]
+binding = "DB"
+database_name = "ourcoloring-gallery"
+database_id = "190edb36-fc83-401e-843e-89a1ec235cbe"
+
+# R2 Bucket
+[[r2_buckets]]
+binding = "GALLERY_BUCKET"
+bucket_name = "ourcoloring-images"
+
+# Secrets (set via `wrangler secret put`):
+# - XAI_API_KEY
+# - ADMIN_PASSWORD

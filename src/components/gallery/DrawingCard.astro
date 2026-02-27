@@ -1,0 +1,48 @@
+---
+import type { Locale } from "@/i18n";
+
+interface Props {
+  slug: string;
+  name: string;
+  thumbnailKey: string;
+  difficulty: string;
+  categorySlug: string;
+  subcategorySlug: string;
+  locale: Locale;
+}
+
+const { slug, name, thumbnailKey, difficulty, categorySlug, subcategorySlug, locale } = Astro.props;
+const href = `/${locale}/gallery/${categorySlug}/${subcategorySlug}/${slug}/`;
+const imgSrc = `https://images.ourcoloring.com/${thumbnailKey}`;
+
+const diffColors: Record<string, string> = {
+  easy: "bg-green-100 text-green-700",
+  medium: "bg-yellow-100 text-yellow-700",
+  hard: "bg-red-100 text-red-700",
+};
+
+const diffLabels: Record<string, Record<string, string>> = {
+  ko: { easy: "쉬움", medium: "보통", hard: "어려움" },
+  en: { easy: "Easy", medium: "Medium", hard: "Hard" },
+};
+---
+
+<a
+  href={href}
+  class="group block rounded-2xl bg-white shadow-sm ring-1 ring-[#E8DFD6] overflow-hidden transition-all duration-200 hover:shadow-lg hover:-translate-y-1"
+>
+  <div class="aspect-square overflow-hidden bg-gray-50">
+    <img
+      src={imgSrc}
+      alt={name}
+      loading="lazy"
+      class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+    />
+  </div>
+  <div class="p-3">
+    <h3 class="text-sm font-medium text-[#3D3530] truncate">{name}</h3>
+    <span class={`mt-1 inline-block px-2 py-0.5 rounded text-xs font-medium ${diffColors[difficulty] || diffColors.medium}`}>
+      {diffLabels[locale]?.[difficulty] || difficulty}
+    </span>
+  </div>
+</a>

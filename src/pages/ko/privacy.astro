@@ -1,0 +1,71 @@
+---
+export const prerender = true;
+
+import Layout from "@/layouts/Layout.astro";
+import { t } from "@/i18n";
+
+const i18n = t("ko");
+---
+
+<Layout title="개인정보처리방침 | OurColoring" description="OurColoring 개인정보처리방침">
+  <main class="mx-auto max-w-3xl px-4 py-12">
+    <h1 class="font-['Nunito'] text-3xl font-extrabold text-[#3D3530] mb-8">개인정보처리방침</h1>
+
+    <div class="prose prose-gray max-w-none space-y-8 text-[#5A524B] text-sm leading-relaxed">
+      <p>최종 업데이트: 2026년 2월 28일</p>
+
+      <section>
+        <h2 class="text-lg font-bold text-[#3D3530] mt-8 mb-3">1. 수집하는 개인정보</h2>
+        <p>OurColoring(이하 "서비스")은 최소한의 정보만 수집합니다.</p>
+        <ul class="list-disc pl-6 space-y-1">
+          <li><strong>사진 파일:</strong> 색칠도안 변환을 위해 업로드한 사진은 변환 처리에만 사용되며, 서버에 저장되지 않습니다. 변환 완료 즉시 삭제됩니다.</li>
+          <li><strong>이메일 주소:</strong> 일일 변환 한도 확장을 위해 자발적으로 제공하신 경우에만 수집합니다.</li>
+          <li><strong>쿠키 및 분석 데이터:</strong> 사용자 동의 시 Google Analytics 4(GA4) 및 Microsoft Clarity를 통해 익명화된 사용 패턴을 수집합니다.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 class="text-lg font-bold text-[#3D3530] mt-8 mb-3">2. 개인정보의 이용 목적</h2>
+        <ul class="list-disc pl-6 space-y-1">
+          <li>사진→색칠도안 변환 서비스 제공</li>
+          <li>서비스 이용 통계 및 개선</li>
+          <li>일일 이용 한도 관리</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 class="text-lg font-bold text-[#3D3530] mt-8 mb-3">3. 개인정보의 보유 및 파기</h2>
+        <ul class="list-disc pl-6 space-y-1">
+          <li>업로드 사진: 변환 완료 즉시 삭제 (서버 저장 없음)</li>
+          <li>이메일: 수집 목적 달성 시까지 보관, 이후 지체 없이 파기</li>
+          <li>쿠키: 브라우저 설정에서 직접 관리 가능</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 class="text-lg font-bold text-[#3D3530] mt-8 mb-3">4. 제3자 서비스</h2>
+        <ul class="list-disc pl-6 space-y-1">
+          <li><strong>xAI (Grok API):</strong> 이미지 변환 처리를 위해 사용합니다. 전송된 이미지는 처리 후 삭제됩니다.</li>
+          <li><strong>Google Analytics 4:</strong> 사이트 이용 통계를 위해 익명화된 데이터를 수집합니다.</li>
+          <li><strong>Microsoft Clarity:</strong> 사용자 경험 개선을 위해 익명화된 세션 데이터를 수집합니다.</li>
+          <li><strong>Cloudflare:</strong> 서비스 호스팅 및 콘텐츠 전송을 위해 사용합니다.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 class="text-lg font-bold text-[#3D3530] mt-8 mb-3">5. 이용자의 권리</h2>
+        <p>이용자는 언제든지 쿠키 동의를 철회하거나, 이메일 삭제를 요청할 수 있습니다. 관련 문의는 문의하기 페이지를 이용해 주세요.</p>
+      </section>
+
+      <section>
+        <h2 class="text-lg font-bold text-[#3D3530] mt-8 mb-3">6. 아동 개인정보 보호</h2>
+        <p>본 서비스는 부모/보호자가 아이를 위해 사용하는 것을 기본으로 합니다. 만 14세 미만 아동이 직접 개인정보를 제공하는 경우, 법정대리인의 동의를 받아야 합니다.</p>
+      </section>
+
+      <section>
+        <h2 class="text-lg font-bold text-[#3D3530] mt-8 mb-3">7. 문의</h2>
+        <p>개인정보 관련 문의: <a href="/ko/contact/" class="text-[#FF6B4A] hover:underline">문의하기</a></p>
+      </section>
+    </div>
+  </main>
+</Layout>
