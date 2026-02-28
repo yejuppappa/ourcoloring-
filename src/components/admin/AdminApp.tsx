@@ -225,6 +225,7 @@ export default function AdminApp() {
           <CategoriesTab
             categories={state.categories}
             subcategories={state.subcategories}
+            onRefresh={loadData}
           />
         )}
       </div>
@@ -650,42 +651,415 @@ function ManageTab({
   );
 }
 
-// ═══ Categories Tab ═══
+// ═══ Categories Tab (Full CRUD) ═══
 function CategoriesTab({
   categories,
   subcategories,
+  onRefresh,
 }: {
   categories: Category[];
   subcategories: Subcategory[];
+  onRefresh: () => void;
 }) {
+  const [editingCat, setEditingCat] = useState<Partial<Category> | null>(null);
+  const [editingSub, setEditingSub] = useState<(Partial<Subcategory> & { _isNew?: boolean }) | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState("");
+
+  const saveCat = async () => {
+    if (!editingCat) return;
+    setSaving(true);
+    setMsg("");
+    try {
+      const isNew = !categories.find((c) => c.id === editingCat.id);
+      const slug = editingCat.slug || editingCat.id || "";
+      const payload = { type: "category", ...editingCat, slug };
+
+      if (isNew) {
+        if (!payload.id || !payload.name_ko || !payload.name_en) {
+          setMsg("ID, 한국어 이름, 영어 이름은 필수입니다.");
+          setSaving(false);
+          return;
+        }
+        await api("categories", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      } else {
+        await api("categories", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }
+      setEditingCat(null);
+      onRefresh();
+    } catch (e: any) {
+      setMsg(`오류: ${e.message}`);
+    }
+    setSaving(false);
+  };
+
+  const deleteCat = async (id: string, name: string) => {
+    const subs = subcategories.filter((s) => s.category_id === id);
+    const warn = subs.length > 0
+      ? `"${name}" 카테고리와 하위 서브카테고리 ${subs.length}개를 모두 삭제합니다. 계속할까요?`
+      : `"${name}" 카테고리를 삭제할까요?`;
+    if (!confirm(warn)) return;
+    try {
+      await api("categories", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "category", id }),
+      });
+      onRefresh();
+    } catch (e: any) {
+      alert(`삭제 실패: ${e.message}`);
+    }
+  };
+
+  const saveSub = async () => {
+    if (!editingSub) return;
+    setSaving(true);
+    setMsg("");
+    try {
+      const isNew = editingSub._isNew;
+      const slug = editingSub.slug || editingSub.id || "";
+      const { _isNew, ...rest } = editingSub;
+      const payload = { type: "subcategory", ...rest, slug };
+
+      if (isNew) {
+        if (!payload.id || !payload.category_id || !payload.name_ko || !payload.name_en) {
+          setMsg("ID, 카테고리, 한국어 이름, 영어 이름은 필수입니다.");
+          setSaving(false);
+          return;
+        }
+        await api("categories", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      } else {
+        await api("categories", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }
+      setEditingSub(null);
+      onRefresh();
+    } catch (e: any) {
+      setMsg(`오류: ${e.message}`);
+    }
+    setSaving(false);
+  };
+
+  const deleteSub = async (id: string, name: string) => {
+    if (!confirm(`"${name}" 서브카테고리를 삭제할까요?`)) return;
+    try {
+      await api("categories", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "subcategory", id }),
+      });
+      onRefresh();
+    } catch (e: any) {
+      alert(`삭제 실패: ${e.message}`);
+    }
+  };
+
   return (
-    <div className="space-y-6 max-w-2xl">
-      <h2 className="text-lg font-bold">카테고리 목록</h2>
-      <p className="text-sm text-gray-500">
-        카테고리와 서브카테고리는 데이터베이스 시드 데이터로 관리됩니다.
-      </p>
-      {categories.map((cat) => (
-        <div key={cat.id} className="rounded-lg border border-gray-200 p-4">
-          <h3 className="font-bold">
-            {cat.icon} {cat.name_ko}{" "}
-            <span className="text-gray-400 font-normal">({cat.name_en})</span>
+    <div className="space-y-6 max-w-3xl">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-bold">카테고리 관리</h2>
+        <button
+          onClick={() =>
+            setEditingCat({ id: "", slug: "", name_ko: "", name_en: "", description_ko: "", description_en: "", icon: "", sort_order: categories.length + 1 })
+          }
+          className="rounded-lg bg-orange-500 px-4 py-2 text-sm font-bold text-white hover:bg-orange-600"
+        >
+          + 카테고리 추가
+        </button>
+      </div>
+
+      {msg && <p className={`text-sm ${msg.startsWith("오류") ? "text-red-500" : "text-green-600"}`}>{msg}</p>}
+
+      {/* ── Category Form Modal ── */}
+      {editingCat && (
+        <div className="rounded-lg border-2 border-orange-300 bg-orange-50 p-4 space-y-3">
+          <h3 className="font-bold text-sm">
+            {categories.find((c) => c.id === editingCat.id) ? "카테고리 수정" : "새 카테고리"}
           </h3>
-          <div className="mt-3 space-y-2">
-            {subcategories
-              .filter((s) => s.category_id === cat.id)
-              .map((sub) => (
-                <div
-                  key={sub.id}
-                  className="flex items-center gap-3 text-sm pl-4"
-                >
-                  <span className="text-gray-400">/{cat.slug}/{sub.slug}/</span>
-                  <span>{sub.name_ko}</span>
-                  <span className="text-gray-400">({sub.name_en})</span>
-                </div>
-              ))}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium mb-1">ID (영문, 변경불가)</label>
+              <input
+                type="text"
+                value={editingCat.id || ""}
+                onChange={(e) => setEditingCat({ ...editingCat, id: e.target.value, slug: e.target.value })}
+                disabled={!!categories.find((c) => c.id === editingCat.id)}
+                className="w-full rounded border px-3 py-2 text-sm disabled:bg-gray-100"
+                placeholder="예: play"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1">아이콘 (이모지)</label>
+              <input
+                type="text"
+                value={editingCat.icon || ""}
+                onChange={(e) => setEditingCat({ ...editingCat, icon: e.target.value })}
+                className="w-full rounded border px-3 py-2 text-sm"
+                placeholder="🎨"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1">이름 (한국어)</label>
+              <input
+                type="text"
+                value={editingCat.name_ko || ""}
+                onChange={(e) => setEditingCat({ ...editingCat, name_ko: e.target.value })}
+                className="w-full rounded border px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1">이름 (영어)</label>
+              <input
+                type="text"
+                value={editingCat.name_en || ""}
+                onChange={(e) => setEditingCat({ ...editingCat, name_en: e.target.value })}
+                className="w-full rounded border px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1">설명 (한국어)</label>
+              <input
+                type="text"
+                value={editingCat.description_ko || ""}
+                onChange={(e) => setEditingCat({ ...editingCat, description_ko: e.target.value })}
+                className="w-full rounded border px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1">설명 (영어)</label>
+              <input
+                type="text"
+                value={editingCat.description_en || ""}
+                onChange={(e) => setEditingCat({ ...editingCat, description_en: e.target.value })}
+                className="w-full rounded border px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1">정렬 순서</label>
+              <input
+                type="number"
+                value={editingCat.sort_order ?? 0}
+                onChange={(e) => setEditingCat({ ...editingCat, sort_order: +e.target.value })}
+                className="w-full rounded border px-3 py-2 text-sm"
+              />
+            </div>
+          </div>
+          <div className="flex gap-2 pt-1">
+            <button
+              onClick={saveCat}
+              disabled={saving}
+              className="rounded bg-orange-500 px-4 py-2 text-sm font-bold text-white hover:bg-orange-600 disabled:opacity-50"
+            >
+              {saving ? "저장 중..." : "저장"}
+            </button>
+            <button
+              onClick={() => { setEditingCat(null); setMsg(""); }}
+              className="rounded border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50"
+            >
+              취소
+            </button>
           </div>
         </div>
-      ))}
+      )}
+
+      {/* ── Subcategory Form Modal ── */}
+      {editingSub && (
+        <div className="rounded-lg border-2 border-blue-300 bg-blue-50 p-4 space-y-3">
+          <h3 className="font-bold text-sm">
+            {editingSub._isNew ? "새 서브카테고리" : "서브카테고리 수정"}
+          </h3>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium mb-1">ID (영문, 변경불가)</label>
+              <input
+                type="text"
+                value={editingSub.id || ""}
+                onChange={(e) => setEditingSub({ ...editingSub, id: e.target.value, slug: e.target.value })}
+                disabled={!editingSub._isNew}
+                className="w-full rounded border px-3 py-2 text-sm disabled:bg-gray-100"
+                placeholder="예: play-dinosaur"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1">소속 카테고리</label>
+              <select
+                value={editingSub.category_id || ""}
+                onChange={(e) => setEditingSub({ ...editingSub, category_id: e.target.value })}
+                className="w-full rounded border px-3 py-2 text-sm"
+              >
+                <option value="">선택...</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.icon} {c.name_ko}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1">이름 (한국어)</label>
+              <input
+                type="text"
+                value={editingSub.name_ko || ""}
+                onChange={(e) => setEditingSub({ ...editingSub, name_ko: e.target.value })}
+                className="w-full rounded border px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1">이름 (영어)</label>
+              <input
+                type="text"
+                value={editingSub.name_en || ""}
+                onChange={(e) => setEditingSub({ ...editingSub, name_en: e.target.value })}
+                className="w-full rounded border px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1">설명 (한국어)</label>
+              <input
+                type="text"
+                value={editingSub.description_ko || ""}
+                onChange={(e) => setEditingSub({ ...editingSub, description_ko: e.target.value })}
+                className="w-full rounded border px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1">설명 (영어)</label>
+              <input
+                type="text"
+                value={editingSub.description_en || ""}
+                onChange={(e) => setEditingSub({ ...editingSub, description_en: e.target.value })}
+                className="w-full rounded border px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1">정렬 순서</label>
+              <input
+                type="number"
+                value={editingSub.sort_order ?? 0}
+                onChange={(e) => setEditingSub({ ...editingSub, sort_order: +e.target.value })}
+                className="w-full rounded border px-3 py-2 text-sm"
+              />
+            </div>
+          </div>
+          <div className="flex gap-2 pt-1">
+            <button
+              onClick={saveSub}
+              disabled={saving}
+              className="rounded bg-blue-500 px-4 py-2 text-sm font-bold text-white hover:bg-blue-600 disabled:opacity-50"
+            >
+              {saving ? "저장 중..." : "저장"}
+            </button>
+            <button
+              onClick={() => { setEditingSub(null); setMsg(""); }}
+              className="rounded border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50"
+            >
+              취소
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Category List ── */}
+      {categories.length === 0 && (
+        <p className="text-sm text-gray-400 py-8 text-center">카테고리가 없습니다. 위 버튼으로 추가하세요.</p>
+      )}
+
+      {categories.map((cat) => {
+        const subs = subcategories.filter((s) => s.category_id === cat.id);
+        return (
+          <div key={cat.id} className="rounded-lg border border-gray-200 p-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold">
+                {cat.icon} {cat.name_ko}{" "}
+                <span className="text-gray-400 font-normal">({cat.name_en})</span>
+                <span className="text-xs text-gray-300 ml-2">#{cat.sort_order}</span>
+              </h3>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setEditingCat({ ...cat })}
+                  className="text-xs text-blue-500 hover:text-blue-700"
+                >
+                  수정
+                </button>
+                <button
+                  onClick={() => deleteCat(cat.id, cat.name_ko)}
+                  className="text-xs text-red-500 hover:text-red-700"
+                >
+                  삭제
+                </button>
+              </div>
+            </div>
+
+            {cat.description_ko && (
+              <p className="text-xs text-gray-400 mt-1">{cat.description_ko}</p>
+            )}
+
+            <div className="mt-3 space-y-1">
+              {subs.map((sub) => (
+                <div
+                  key={sub.id}
+                  className="flex items-center justify-between text-sm pl-4 py-1.5 hover:bg-gray-50 rounded"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-gray-300 text-xs">/{cat.slug}/{sub.slug}/</span>
+                    <span>{sub.name_ko}</span>
+                    <span className="text-gray-400">({sub.name_en})</span>
+                    <span className="text-xs text-gray-300">#{sub.sort_order}</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setEditingSub({ ...sub })}
+                      className="text-xs text-blue-500 hover:text-blue-700"
+                    >
+                      수정
+                    </button>
+                    <button
+                      onClick={() => deleteSub(sub.id, sub.name_ko)}
+                      className="text-xs text-red-500 hover:text-red-700"
+                    >
+                      삭제
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={() =>
+                setEditingSub({
+                  _isNew: true,
+                  id: "",
+                  category_id: cat.id,
+                  slug: "",
+                  name_ko: "",
+                  name_en: "",
+                  description_ko: "",
+                  description_en: "",
+                  sort_order: subs.length + 1,
+                })
+              }
+              className="mt-2 text-xs text-orange-500 hover:text-orange-700 pl-4"
+            >
+              + 서브카테고리 추가
+            </button>
+          </div>
+        );
+      })}
     </div>
   );
 }
