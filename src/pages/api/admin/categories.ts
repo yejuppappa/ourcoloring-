@@ -1,20 +1,14 @@
 /**
  * GET /api/admin/categories — List categories (with optional subcategories)
  */
+import type { APIContext } from "astro";
 
-interface Env {
-  DB: D1Database;
-  ADMIN_PASSWORD: string;
-}
+export const prerender = false;
 
-export async function onRequestGet(context: {
-  request: Request;
-  env: Env;
-}): Promise<Response> {
-  const { env, request } = context;
-  const url = new URL(request.url);
+export async function GET(context: APIContext): Promise<Response> {
+  const env = context.locals.runtime.env;
+  const url = new URL(context.request.url);
   const includeSubcategories = url.searchParams.has("subcategories");
-
   const headers = { "Content-Type": "application/json" };
 
   try {
@@ -28,7 +22,7 @@ export async function onRequestGet(context: {
       ).all();
       return new Response(
         JSON.stringify({ categories, subcategories }),
-        { headers }
+        { headers },
       );
     }
 
@@ -36,7 +30,7 @@ export async function onRequestGet(context: {
   } catch (e: any) {
     return new Response(
       JSON.stringify({ error: e.message }),
-      { status: 500, headers }
+      { status: 500, headers },
     );
   }
 }

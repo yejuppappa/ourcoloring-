@@ -1,22 +1,15 @@
 /**
- * Cloudflare Pages Function — POST /api/convert
- *
- * Calls Grok Image Edit API (grok-imagine-image) to convert a photo into a coloring page.
- * When XAI_API_KEY is missing: returns { mock: true } so the client
- * falls back to client-side edge detection.
+ * POST /api/convert — Grok Image Edit API (photo → coloring page)
  */
+import type { APIContext } from "astro";
 
-interface Env {
-  XAI_API_KEY?: string;
-}
+export const prerender = false;
 
 interface RequestBody {
-  image: string; // base64 data URL
+  image: string;
   mode: "keep" | "remove" | "create";
   difficulty: "high" | "medium" | "low";
 }
-
-// ── Prompt Assembly ──────────────────────────────────────────
 
 const PROMPT_BASE = `이 사진을 아래의 조건을 지켜서 색칠도안으로 바꿔줘.
 조건
@@ -42,29 +35,19 @@ const DIFFICULTY_PROMPTS: Record<string, string> = {
 
 function buildPrompt(mode: string, difficulty: string): string {
   let prompt = PROMPT_BASE + "\n" + (BG_PROMPTS[mode] || BG_PROMPTS.keep);
-
   const diff = DIFFICULTY_PROMPTS[difficulty] || "";
-  if (diff) {
-    prompt += "\n" + diff;
-  }
-
+  if (diff) prompt += "\n" + diff;
   return prompt;
 }
 
-// ── Handler ──────────────────────────────────────────────────
-
-export async function onRequestPost(context: {
-  request: Request;
-  env: Env;
-}): Promise<Response> {
-  const { request, env } = context;
+export async function POST(context: APIContext): Promise<Response> {
+  const env = context.locals.runtime.env;
 
   const corsHeaders = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
   };
 
-  // No API key → tell client to use mock
   const apiKey = env.XAI_API_KEY;
   if (!apiKey) {
     return new Response(
@@ -74,7 +57,7 @@ export async function onRequestPost(context: {
   }
 
   try {
-    const body: RequestBody = await request.json();
+    const body: RequestBody = await context.request.json();
     const { image, mode = "keep", difficulty = "high" } = body;
 
     if (!image) {
@@ -86,24 +69,14 @@ export async function onRequestPost(context: {
 
     const prompt = buildPrompt(mode, difficulty);
 
-    // Build request body for Grok Image Edit API
     const requestBody = {
       model: "grok-imagine-image",
-      prompt: prompt,
+      prompt,
       n: 1,
       response_format: "b64_json",
-      image: {
-        url: image,
-        type: "image_url",
-      },
+      image: { url: image, type: "image_url" },
     };
 
-    console.log("[convert] Request body:", JSON.stringify({
-      ...requestBody,
-      image: { ...requestBody.image, url: requestBody.image.url.slice(0, 80) + "..." },
-    }));
-
-    // Call x.ai Grok Image Edit API
     const grokRes = await fetch("https://api.x.ai/v1/images/edits", {
       method: "POST",
       headers: {
@@ -117,20 +90,12 @@ export async function onRequestPost(context: {
       const errorText = await grokRes.text();
       console.error("Grok API error:", grokRes.status, errorText);
       return new Response(
-        JSON.stringify({
-          error: "AI conversion failed",
-          status: grokRes.status,
-        }),
+        JSON.stringify({ error: "AI conversion failed", status: grokRes.status }),
         { status: 502, headers: corsHeaders },
       );
     }
 
     const grokData: any = await grokRes.json();
-
-    console.log("[convert] Response keys:", Object.keys(grokData));
-    console.log("[convert] data[0] keys:", grokData.data?.[0] ? Object.keys(grokData.data[0]) : "no data");
-
-    // Extract base64 image from response
     const b64 = grokData.data?.[0]?.b64_json;
 
     if (!b64) {
@@ -141,10 +106,8 @@ export async function onRequestPost(context: {
       );
     }
 
-    const imageUrl = `data:image/png;base64,${b64}`;
-
     return new Response(
-      JSON.stringify({ mock: false, imageUrl }),
+      JSON.stringify({ mock: false, imageUrl: `data:image/png;base64,${b64}` }),
       { status: 200, headers: corsHeaders },
     );
   } catch (err: any) {
@@ -154,4 +117,4 @@ export async function onRequestPost(context: {
       { status: 500, headers: corsHeaders },
     );
   }
-};
+}

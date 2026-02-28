@@ -2,24 +2,18 @@
  * PATCH  /api/admin/drawings/:id — Update drawing metadata
  * DELETE /api/admin/drawings/:id — Delete drawing (+ R2 images)
  */
+import type { APIContext } from "astro";
 
-interface Env {
-  DB: D1Database;
-  GALLERY_BUCKET: R2Bucket;
-  ADMIN_PASSWORD: string;
-}
+export const prerender = false;
 
 const headers = { "Content-Type": "application/json" };
 
-export async function onRequestPatch(context: {
-  request: Request;
-  env: Env;
-  params: { id: string };
-}): Promise<Response> {
-  const { request, env, params } = context;
+export async function PATCH(context: APIContext): Promise<Response> {
+  const env = context.locals.runtime.env;
+  const id = context.params.id!;
 
   try {
-    const data = await request.json() as Record<string, any>;
+    const data = (await context.request.json()) as Record<string, any>;
     const allowed = [
       "name_ko", "name_en", "description_ko", "description_en",
       "difficulty", "age_min", "age_max", "is_published", "subcategory_id",
@@ -38,12 +32,12 @@ export async function onRequestPatch(context: {
     if (sets.length === 0) {
       return new Response(
         JSON.stringify({ error: "No valid fields to update" }),
-        { status: 400, headers }
+        { status: 400, headers },
       );
     }
 
     sets.push("updated_at = datetime('now')");
-    values.push(params.id);
+    values.push(id);
 
     await env.DB.prepare(
       `UPDATE drawings SET ${sets.join(", ")} WHERE id = ?`
@@ -55,30 +49,26 @@ export async function onRequestPatch(context: {
   } catch (e: any) {
     return new Response(
       JSON.stringify({ error: e.message }),
-      { status: 500, headers }
+      { status: 500, headers },
     );
   }
 }
 
-export async function onRequestDelete(context: {
-  request: Request;
-  env: Env;
-  params: { id: string };
-}): Promise<Response> {
-  const { env, params } = context;
+export async function DELETE(context: APIContext): Promise<Response> {
+  const env = context.locals.runtime.env;
+  const id = context.params.id!;
 
   try {
-    // Get drawing to find R2 keys
     const drawing = await env.DB.prepare(
       "SELECT image_key, thumbnail_key FROM drawings WHERE id = ?"
     )
-      .bind(params.id)
+      .bind(id)
       .first<{ image_key: string; thumbnail_key: string }>();
 
     if (!drawing) {
       return new Response(
         JSON.stringify({ error: "Drawing not found" }),
-        { status: 404, headers }
+        { status: 404, headers },
       );
     }
 
@@ -87,14 +77,14 @@ export async function onRequestDelete(context: {
 
     // Delete from D1
     await env.DB.prepare("DELETE FROM drawings WHERE id = ?")
-      .bind(params.id)
+      .bind(id)
       .run();
 
     return new Response(JSON.stringify({ ok: true }), { headers });
   } catch (e: any) {
     return new Response(
       JSON.stringify({ error: e.message }),
-      { status: 500, headers }
+      { status: 500, headers },
     );
   }
 }

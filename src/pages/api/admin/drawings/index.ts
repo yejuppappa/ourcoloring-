@@ -1,15 +1,10 @@
 /**
- * POST   /api/admin/drawings         — Create drawing (FormData: image + metadata)
- * GET    /api/admin/drawings          — List drawings (admin view)
- * PATCH  /api/admin/drawings/:id      — Update drawing metadata
- * DELETE /api/admin/drawings/:id      — Delete drawing
+ * POST /api/admin/drawings — Create drawing (FormData: image + metadata)
+ * GET  /api/admin/drawings — List drawings (admin view)
  */
+import type { APIContext } from "astro";
 
-interface Env {
-  DB: D1Database;
-  GALLERY_BUCKET: R2Bucket;
-  ADMIN_PASSWORD: string;
-}
+export const prerender = false;
 
 const headers = { "Content-Type": "application/json" };
 
@@ -25,36 +20,32 @@ function slugify(text: string): string {
     .slice(0, 60);
 }
 
-export async function onRequestPost(context: {
-  request: Request;
-  env: Env;
-}): Promise<Response> {
-  const { request, env } = context;
+export async function POST(context: APIContext): Promise<Response> {
+  const env = context.locals.runtime.env;
 
   try {
-    const formData = await request.formData();
+    const formData = await context.request.formData();
     const imageFile = formData.get("image") as File | null;
 
     if (!imageFile) {
       return new Response(
         JSON.stringify({ error: "No image provided" }),
-        { status: 400, headers }
+        { status: 400, headers },
       );
     }
 
     const subcategoryId = formData.get("subcategory_id") as string;
-    const nameKo = formData.get("name_ko") as string || imageFile.name.replace(/\.[^.]+$/, "");
-    const nameEn = formData.get("name_en") as string || nameKo;
+    const nameKo = (formData.get("name_ko") as string) || imageFile.name.replace(/\.[^.]+$/, "");
+    const nameEn = (formData.get("name_en") as string) || nameKo;
     const difficulty = (formData.get("difficulty") as string) || "medium";
     const ageMin = parseInt(formData.get("age_min") as string) || 3;
     const ageMax = parseInt(formData.get("age_max") as string) || 10;
-    const descriptionKo = formData.get("description_ko") as string || "";
-    const descriptionEn = formData.get("description_en") as string || "";
+    const descriptionKo = (formData.get("description_ko") as string) || "";
+    const descriptionEn = (formData.get("description_en") as string) || "";
 
     const id = generateId();
     const slug = slugify(nameEn || nameKo) + "-" + id.slice(0, 6);
 
-    // Determine file extension
     const ext = imageFile.name.split(".").pop()?.toLowerCase() || "png";
     const imageKey = `drawings/${subcategoryId}/${slug}.${ext}`;
     const thumbnailKey = `thumbnails/${subcategoryId}/${slug}.webp`;
@@ -65,7 +56,7 @@ export async function onRequestPost(context: {
       httpMetadata: { contentType: imageFile.type },
     });
 
-    // For now, use the same image as thumbnail (client-side resize can be added later)
+    // Use same image as thumbnail for now
     await env.GALLERY_BUCKET.put(thumbnailKey, imageBuffer, {
       httpMetadata: { contentType: imageFile.type },
     });
@@ -80,28 +71,25 @@ export async function onRequestPost(context: {
       .bind(
         id, subcategoryId, slug, nameKo, nameEn,
         descriptionKo, descriptionEn, difficulty, ageMin, ageMax,
-        imageKey, thumbnailKey
+        imageKey, thumbnailKey,
       )
       .run();
 
     return new Response(
       JSON.stringify({ ok: true, id, slug }),
-      { status: 201, headers }
+      { status: 201, headers },
     );
   } catch (e: any) {
     return new Response(
       JSON.stringify({ error: e.message }),
-      { status: 500, headers }
+      { status: 500, headers },
     );
   }
 }
 
-export async function onRequestGet(context: {
-  request: Request;
-  env: Env;
-}): Promise<Response> {
-  const { request, env } = context;
-  const url = new URL(request.url);
+export async function GET(context: APIContext): Promise<Response> {
+  const env = context.locals.runtime.env;
+  const url = new URL(context.request.url);
 
   const page = parseInt(url.searchParams.get("page") || "1");
   const limit = Math.min(parseInt(url.searchParams.get("limit") || "20"), 100);
@@ -150,12 +138,12 @@ export async function onRequestGet(context: {
 
     return new Response(
       JSON.stringify({ drawings, total: countResult?.count || 0 }),
-      { headers }
+      { headers },
     );
   } catch (e: any) {
     return new Response(
       JSON.stringify({ error: e.message }),
-      { status: 500, headers }
+      { status: 500, headers },
     );
   }
 }

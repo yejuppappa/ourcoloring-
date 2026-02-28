@@ -1,18 +1,13 @@
 /**
  * GET /api/gallery/drawings — Public gallery API
- * Query params: subcategory, difficulty, limit, offset, order (newest|popular)
  */
+import type { APIContext } from "astro";
 
-interface Env {
-  DB: D1Database;
-}
+export const prerender = false;
 
-export async function onRequestGet(context: {
-  request: Request;
-  env: Env;
-}): Promise<Response> {
-  const { request, env } = context;
-  const url = new URL(request.url);
+export async function GET(context: APIContext): Promise<Response> {
+  const env = context.locals.runtime.env;
+  const url = new URL(context.request.url);
   const headers = {
     "Content-Type": "application/json",
     "Cache-Control": "public, max-age=60",
@@ -68,12 +63,12 @@ export async function onRequestGet(context: {
 
     return new Response(
       JSON.stringify({ drawings, total: countResult?.count || 0 }),
-      { headers }
+      { headers },
     );
   } catch (e: any) {
     return new Response(
       JSON.stringify({ error: e.message }),
-      { status: 500, headers }
+      { status: 500, headers },
     );
   }
 }

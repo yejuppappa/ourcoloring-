@@ -1,17 +1,21 @@
 /**
- * Shared auth check for admin API endpoints.
- * Validates the admin session cookie.
+ * Shared admin auth — token store + cookie helpers.
+ * Module-level state persists within the same Worker isolate.
  */
 
 const COOKIE_NAME = "ourcoloring_admin";
 
-// Shared token store (module-level, persists across requests within same isolate)
+// Valid tokens (resets on Worker restart, which is fine)
 export const validTokens = new Set<string>();
 
-export function isAuthenticated(request: Request): boolean {
+export function getCookie(request: Request): string | null {
   const cookies = request.headers.get("Cookie") || "";
   const match = cookies.match(new RegExp(`${COOKIE_NAME}=([^;]+)`));
-  const token = match ? match[1] : null;
+  return match ? match[1] : null;
+}
+
+export function isAuthenticated(request: Request): boolean {
+  const token = getCookie(request);
   return !!token && validTokens.has(token);
 }
 

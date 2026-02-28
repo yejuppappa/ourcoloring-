@@ -1,20 +1,15 @@
 /**
  * GET /api/sitemap-gallery.xml — Dynamic sitemap for gallery pages
  */
+import type { APIContext } from "astro";
 
-interface Env {
-  DB: D1Database;
-}
+export const prerender = false;
 
-export async function onRequestGet(context: {
-  request: Request;
-  env: Env;
-}): Promise<Response> {
-  const { env } = context;
+export async function GET(context: APIContext): Promise<Response> {
+  const env = context.locals.runtime.env;
   const baseUrl = "https://ourcoloring.com";
 
   try {
-    // Get all published drawings with their category/subcategory info
     const { results: drawings } = await env.DB.prepare(
       `SELECT d.slug as drawing_slug, d.updated_at,
               c.slug as category_slug,
@@ -45,7 +40,6 @@ export async function onRequestGet(context: {
     let xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`;
 
-    // Gallery landing
     for (const locale of ["ko", "en"]) {
       xml += `
   <url>
@@ -54,7 +48,6 @@ export async function onRequestGet(context: {
     <priority>0.8</priority>
   </url>`;
 
-      // Categories
       for (const cat of categories) {
         xml += `
   <url>
@@ -64,7 +57,6 @@ export async function onRequestGet(context: {
   </url>`;
       }
 
-      // Subcategories
       for (const sub of subcategories) {
         xml += `
   <url>
@@ -74,7 +66,6 @@ export async function onRequestGet(context: {
   </url>`;
       }
 
-      // Individual drawings
       for (const d of drawings) {
         xml += `
   <url>

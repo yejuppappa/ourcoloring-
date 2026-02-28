@@ -1,28 +1,25 @@
 /**
  * POST /api/gallery/download — Increment download count
  */
+import type { APIContext } from "astro";
 
-interface Env {
-  DB: D1Database;
-}
+export const prerender = false;
 
-export async function onRequestPost(context: {
-  request: Request;
-  env: Env;
-}): Promise<Response> {
+export async function POST(context: APIContext): Promise<Response> {
+  const env = context.locals.runtime.env;
   const headers = { "Content-Type": "application/json" };
 
   try {
-    const { id } = await context.request.json() as { id: string };
+    const { id } = (await context.request.json()) as { id: string };
 
     if (!id) {
       return new Response(
         JSON.stringify({ error: "Missing id" }),
-        { status: 400, headers }
+        { status: 400, headers },
       );
     }
 
-    await context.env.DB.prepare(
+    await env.DB.prepare(
       "UPDATE drawings SET download_count = download_count + 1 WHERE id = ?"
     )
       .bind(id)
@@ -32,7 +29,7 @@ export async function onRequestPost(context: {
   } catch (e: any) {
     return new Response(
       JSON.stringify({ error: e.message }),
-      { status: 500, headers }
+      { status: 500, headers },
     );
   }
 }

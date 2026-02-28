@@ -2,13 +2,13 @@
  * POST /api/admin/auth — Login with password
  * GET  /api/admin/auth — Check session
  */
+import type { APIContext } from "astro";
+import { validTokens, getCookie } from "@/lib/admin-auth";
 
-interface Env {
-  ADMIN_PASSWORD: string;
-}
+export const prerender = false;
 
 const COOKIE_NAME = "ourcoloring_admin";
-const COOKIE_MAX_AGE = 60 * 60 * 24; // 24 hours
+const COOKIE_MAX_AGE = 60 * 60 * 24; // 24h
 
 async function createToken(password: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -21,23 +21,11 @@ function setCookie(token: string): string {
   return `${COOKIE_NAME}=${token}; Path=/api/admin; HttpOnly; Secure; SameSite=Strict; Max-Age=${COOKIE_MAX_AGE}`;
 }
 
-function getCookie(request: Request): string | null {
-  const cookies = request.headers.get("Cookie") || "";
-  const match = cookies.match(new RegExp(`${COOKIE_NAME}=([^;]+)`));
-  return match ? match[1] : null;
-}
-
-// Store valid tokens in memory (resets on Worker restart, which is fine)
-const validTokens = new Set<string>();
-
-export async function onRequestPost(context: {
-  request: Request;
-  env: Env;
-}): Promise<Response> {
-  const { request, env } = context;
+export async function POST(context: APIContext): Promise<Response> {
+  const env = context.locals.runtime.env;
 
   try {
-    const { password } = await request.json() as { password: string };
+    const { password } = (await context.request.json()) as { password: string };
 
     if (!env.ADMIN_PASSWORD || password !== env.ADMIN_PASSWORD) {
       return new Response(JSON.stringify({ error: "Invalid password" }), {
@@ -64,10 +52,7 @@ export async function onRequestPost(context: {
   }
 }
 
-export async function onRequestGet(context: {
-  request: Request;
-  env: Env;
-}): Promise<Response> {
+export async function GET(context: APIContext): Promise<Response> {
   const token = getCookie(context.request);
 
   if (!token || !validTokens.has(token)) {
@@ -81,10 +66,4 @@ export async function onRequestGet(context: {
     status: 200,
     headers: { "Content-Type": "application/json" },
   });
-}
-
-// Export auth check for other admin endpoints
-export function isAuthenticated(request: Request): boolean {
-  const token = getCookie(request);
-  return !!token && validTokens.has(token);
 }
