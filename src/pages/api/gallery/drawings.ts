@@ -1,5 +1,14 @@
 /**
  * GET /api/gallery/drawings — Public gallery API
+ *
+ * Query params:
+ *   subcategory  — filter by subcategory_id
+ *   category     — filter by category_id (all subcategories in that category)
+ *   difficulty   — comma-separated: easy,medium,hard
+ *   limit        — max 50 (default 24)
+ *   offset       — pagination offset
+ *   order        — newest (default) | popular | name
+ *   locale       — ko | en (for name sorting)
  */
 import type { APIContext } from "astro";
 
@@ -14,10 +23,12 @@ export async function GET(context: APIContext): Promise<Response> {
   };
 
   const subcategory = url.searchParams.get("subcategory") || "";
-  const difficulty = url.searchParams.get("difficulty") || "";
-  const limit = Math.min(parseInt(url.searchParams.get("limit") || "20"), 50);
+  const categoryId = url.searchParams.get("category") || "";
+  const difficultyParam = url.searchParams.get("difficulty") || "";
+  const limit = Math.min(parseInt(url.searchParams.get("limit") || "24"), 50);
   const offset = parseInt(url.searchParams.get("offset") || "0");
-  const order = url.searchParams.get("order") === "popular" ? "popular" : "newest";
+  const orderParam = url.searchParams.get("order") || "newest";
+  const locale = url.searchParams.get("locale") || "ko";
 
   try {
     const conditions: string[] = ["d.is_published = 1"];
@@ -27,19 +38,41 @@ export async function GET(context: APIContext): Promise<Response> {
       conditions.push("d.subcategory_id = ?");
       params.push(subcategory);
     }
-    if (difficulty) {
-      conditions.push("d.difficulty = ?");
-      params.push(difficulty);
+
+    if (categoryId) {
+      conditions.push("s.category_id = ?");
+      params.push(categoryId);
+    }
+
+    // Support comma-separated difficulties
+    if (difficultyParam) {
+      const diffs = difficultyParam.split(",").filter((d) => ["easy", "medium", "hard"].includes(d));
+      if (diffs.length > 0 && diffs.length < 3) {
+        conditions.push(`d.difficulty IN (${diffs.map(() => "?").join(",")})`);
+        params.push(...diffs);
+      }
     }
 
     const where = "WHERE " + conditions.join(" AND ");
-    const orderBy =
-      order === "popular"
-        ? "ORDER BY d.download_count DESC, d.created_at DESC"
-        : "ORDER BY d.created_at DESC";
+
+    let orderBy: string;
+    switch (orderParam) {
+      case "popular":
+        orderBy = "ORDER BY d.download_count DESC, d.created_at DESC";
+        break;
+      case "name":
+        orderBy = locale === "en"
+          ? "ORDER BY d.name_en ASC, d.created_at DESC"
+          : "ORDER BY d.name_ko ASC, d.created_at DESC";
+        break;
+      default:
+        orderBy = "ORDER BY d.created_at DESC";
+    }
 
     const countResult = await env.DB.prepare(
-      `SELECT COUNT(*) as count FROM drawings d ${where}`
+      `SELECT COUNT(*) as count FROM drawings d
+       JOIN subcategories s ON d.subcategory_id = s.id
+       ${where}`
     )
       .bind(...params)
       .first<{ count: number }>();

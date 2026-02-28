@@ -1,0 +1,54 @@
+---
+/**
+ * GalleryPagination — Page navigation (placed below the grid)
+ */
+interface Props {
+  currentPage: number;
+  totalPages: number;
+  locale: "ko" | "en";
+}
+
+const { currentPage, totalPages, locale } = Astro.props;
+const isKo = locale === "ko";
+---
+
+{totalPages > 1 && (
+  <div class="flex items-center justify-center gap-3 pt-6 pb-2">
+    <button
+      id="gf-prev"
+      disabled={currentPage <= 1}
+      class="rounded-lg border border-[#E8DFD6] px-4 py-2 text-sm text-[#3D3530] hover:bg-[#FFF0E5] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+    >
+      {isKo ? "이전" : "Prev"}
+    </button>
+    <span class="text-sm text-[#7A7067]">
+      {currentPage} / {totalPages}
+    </span>
+    <button
+      id="gf-next"
+      disabled={currentPage >= totalPages}
+      class="rounded-lg border border-[#E8DFD6] px-4 py-2 text-sm text-[#3D3530] hover:bg-[#FFF0E5] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+    >
+      {isKo ? "다음" : "Next"}
+    </button>
+  </div>
+
+  <script is:inline>
+  (function() {
+    var params = new URL(window.location.href).searchParams;
+    var curPage = parseInt(params.get('page') || '1');
+
+    function goToPage(p) {
+      var u = new URL(window.location.href);
+      if (p <= 1) u.searchParams.delete('page');
+      else u.searchParams.set('page', String(p));
+      window.location.href = u.toString();
+    }
+
+    var prevBtn = document.getElementById('gf-prev');
+    var nextBtn = document.getElementById('gf-next');
+    if (prevBtn) prevBtn.addEventListener('click', function() { if (curPage > 1) goToPage(curPage - 1); });
+    if (nextBtn) nextBtn.addEventListener('click', function() { goToPage(curPage + 1); });
+  })();
+  </script>
+)}

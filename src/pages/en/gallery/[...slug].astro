@@ -4,6 +4,8 @@ export const prerender = false;
 import Layout from "@/layouts/Layout.astro";
 import DrawingCard from "@/components/gallery/DrawingCard.astro";
 import GalleryGrid from "@/components/gallery/GalleryGrid.astro";
+import GalleryFilter from "@/components/gallery/GalleryFilter.astro";
+import GalleryPagination from "@/components/gallery/GalleryPagination.astro";
 import { t } from "@/i18n";
 import type { Category, Subcategory, Drawing, DrawingWithMeta } from "@/lib/db/types";
 
@@ -16,6 +18,13 @@ const DB = runtime.env.DB;
 
 const slugParts = Astro.params.slug ? Astro.params.slug.split("/").filter(Boolean) : [];
 const R2_URL = "https://images.ourcoloring.com";
+const PER_PAGE = 24;
+
+// Parse URL query params for filter/sort/page
+const url = new URL(Astro.request.url);
+const difficultyParam = url.searchParams.get("difficulty") || "";
+const sortParam = url.searchParams.get("sort") || "newest";
+const pageParam = Math.max(1, parseInt(url.searchParams.get("page") || "1"));
 
 let pageType: "landing" | "category" | "subcategory" | "drawing" = "landing";
 let category: Category | null = null;
@@ -26,8 +35,24 @@ let subcategories: (Subcategory & { drawing_count: number })[] = [];
 let drawings: Drawing[] = [];
 let relatedDrawings: Drawing[] = [];
 let totalDrawings = 0;
+let totalPages = 0;
 let pageTitle = g.title;
 let pageDescription = g.subtitle;
+
+function buildDifficultyFilter(param: string): { sql: string; binds: string[] } {
+  if (!param) return { sql: "", binds: [] };
+  const diffs = param.split(",").filter((d) => ["easy", "medium", "hard"].includes(d));
+  if (diffs.length === 0 || diffs.length === 3) return { sql: "", binds: [] };
+  return { sql: `AND d.difficulty IN (${diffs.map(() => "?").join(",")})`, binds: diffs };
+}
+
+function buildOrderBy(sort: string): string {
+  switch (sort) {
+    case "popular": return "ORDER BY d.download_count DESC, d.created_at DESC";
+    case "name": return "ORDER BY d.name_en ASC, d.created_at DESC";
+    default: return "ORDER BY d.created_at DESC";
+  }
+}
 
 try {
   if (slugParts.length === 0) {
@@ -55,6 +80,27 @@ try {
        GROUP BY s.id ORDER BY s.sort_order`
     ).bind(category.id).all<Subcategory & { drawing_count: number }>();
     subcategories = results;
+
+    const diff = buildDifficultyFilter(difficultyParam);
+    const orderBy = buildOrderBy(sortParam);
+    const offset = (pageParam - 1) * PER_PAGE;
+
+    const countResult = await DB.prepare(
+      `SELECT COUNT(*) as count FROM drawings d
+       JOIN subcategories s ON d.subcategory_id = s.id
+       WHERE s.category_id = ? AND d.is_published = 1 ${diff.sql}`
+    ).bind(category.id, ...diff.binds).first<{ count: number }>();
+    totalDrawings = countResult?.count || 0;
+    totalPages = Math.ceil(totalDrawings / PER_PAGE);
+
+    const { results: drawingResults } = await DB.prepare(
+      `SELECT d.*, s.slug as subcategory_slug FROM drawings d
+       JOIN subcategories s ON d.subcategory_id = s.id
+       WHERE s.category_id = ? AND d.is_published = 1 ${diff.sql}
+       ${orderBy} LIMIT ? OFFSET ?`
+    ).bind(category.id, ...diff.binds, PER_PAGE, offset).all<Drawing & { subcategory_slug: string }>();
+    drawings = drawingResults;
+
     pageTitle = `${category.name_en} | ${g.title}`;
     pageDescription = category.description_en || g.subtitle;
 
@@ -69,16 +115,24 @@ try {
     ).bind(category.id, slugParts[1]).first<Subcategory>();
     if (!subcategory) return Astro.redirect(`/${locale}/gallery/${slugParts[0]}/`);
 
+    const diff = buildDifficultyFilter(difficultyParam);
+    const orderBy = buildOrderBy(sortParam);
+    const offset = (pageParam - 1) * PER_PAGE;
+
     const countResult = await DB.prepare(
-      "SELECT COUNT(*) as count FROM drawings WHERE subcategory_id = ? AND is_published = 1"
-    ).bind(subcategory.id).first<{ count: number }>();
+      `SELECT COUNT(*) as count FROM drawings d
+       WHERE d.subcategory_id = ? AND d.is_published = 1 ${diff.sql}`
+    ).bind(subcategory.id, ...diff.binds).first<{ count: number }>();
     totalDrawings = countResult?.count || 0;
+    totalPages = Math.ceil(totalDrawings / PER_PAGE);
 
     const { results } = await DB.prepare(
-      `SELECT * FROM drawings WHERE subcategory_id = ? AND is_published = 1
-       ORDER BY created_at DESC LIMIT 50`
-    ).bind(subcategory.id).all<Drawing>();
+      `SELECT * FROM drawings d
+       WHERE d.subcategory_id = ? AND d.is_published = 1 ${diff.sql}
+       ${orderBy} LIMIT ? OFFSET ?`
+    ).bind(subcategory.id, ...diff.binds, PER_PAGE, offset).all<Drawing>();
     drawings = results;
+
     pageTitle = `${subcategory.name_en} Coloring Pages | OurColoring`;
     pageDescription = subcategory.description_en || `Free ${subcategory.name_en} coloring pages to download and print`;
 
@@ -113,6 +167,7 @@ try {
        ORDER BY download_count DESC LIMIT 4`
     ).bind(subcategory.id, d.id).all<Drawing>();
     relatedDrawings = results;
+
     pageTitle = `${d.name_en} Coloring Page | OurColoring`;
     pageDescription = d.description_en || `Free ${d.name_en} coloring page to download and print.`;
 
@@ -170,10 +225,9 @@ const diffLabels: Record<string, string> = { easy: "Easy", medium: "Medium", har
           <h1 class="font-['Nunito'] text-2xl font-extrabold text-[#3D3530] md:text-3xl">{category.icon} {category.name_en}</h1>
           <p class="mt-2 text-[#7A7067]">{category.description_en}</p>
         </div>
-        {subcategories.length === 0 ? (
-          <div class="text-center py-12 text-[#A09890]">{g.comingSoon}</div>
-        ) : (
-          <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+
+        {subcategories.length > 0 && (
+          <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 mb-8">
             {subcategories.map((sub: any) => (
               <a href={`/${locale}/gallery/${category!.slug}/${sub.slug}/`} class="group block rounded-xl bg-white p-5 shadow-sm ring-1 ring-[#E8DFD6] transition-all hover:shadow-md hover:-translate-y-0.5">
                 <h3 class="font-bold text-[#3D3530] group-hover:text-[#FF6B4A] transition-colors">{sub.name_en}</h3>
@@ -181,6 +235,35 @@ const diffLabels: Record<string, string> = { easy: "Easy", medium: "Medium", har
               </a>
             ))}
           </div>
+        )}
+
+        {totalDrawings > 0 && (
+          <div>
+            <GalleryFilter
+              totalDrawings={totalDrawings}
+              locale={locale}
+              activeDifficulty={difficultyParam}
+              activeSort={sortParam}
+            />
+            <GalleryGrid>
+              {drawings.map((d: any) => (
+                <DrawingCard
+                  slug={d.slug}
+                  name={d.name_en}
+                  thumbnailKey={d.thumbnail_key}
+                  difficulty={d.difficulty}
+                  categorySlug={category!.slug}
+                  subcategorySlug={d.subcategory_slug || ""}
+                  locale={locale}
+                />
+              ))}
+            </GalleryGrid>
+            <GalleryPagination currentPage={pageParam} totalPages={totalPages} locale={locale} />
+          </div>
+        )}
+
+        {totalDrawings === 0 && subcategories.length === 0 && (
+          <div class="text-center py-12 text-[#A09890]">{g.comingSoon}</div>
         )}
       </div>
     )}
@@ -194,21 +277,31 @@ const diffLabels: Record<string, string> = { easy: "Easy", medium: "Medium", har
           <span class="mx-2">›</span>
           <span class="text-[#3D3530]">{subcategory.name_en}</span>
         </nav>
-        <div class="mb-8">
+        <div class="mb-6">
           <h1 class="font-['Nunito'] text-2xl font-extrabold text-[#3D3530] md:text-3xl">{subcategory.name_en} Coloring Pages</h1>
-          <p class="mt-2 text-sm text-[#A09890]">{totalDrawings} {g.drawings}</p>
         </div>
+
+        <GalleryFilter
+          totalDrawings={totalDrawings}
+          locale={locale}
+          activeDifficulty={difficultyParam}
+          activeSort={sortParam}
+        />
+
         {drawings.length === 0 ? (
           <div class="text-center py-12">
             <p class="text-[#7A7067]">{g.noDrawings}</p>
             <p class="mt-2 text-sm text-[#A09890]">{g.comingSoon}</p>
           </div>
         ) : (
-          <GalleryGrid>
-            {drawings.map((d: Drawing) => (
-              <DrawingCard slug={d.slug} name={d.name_en} thumbnailKey={d.thumbnail_key} difficulty={d.difficulty} categorySlug={category!.slug} subcategorySlug={subcategory!.slug} locale={locale} />
-            ))}
-          </GalleryGrid>
+          <div>
+            <GalleryGrid>
+              {drawings.map((d: Drawing) => (
+                <DrawingCard slug={d.slug} name={d.name_en} thumbnailKey={d.thumbnail_key} difficulty={d.difficulty} categorySlug={category!.slug} subcategorySlug={subcategory!.slug} locale={locale} />
+              ))}
+            </GalleryGrid>
+            <GalleryPagination currentPage={pageParam} totalPages={totalPages} locale={locale} />
+          </div>
         )}
       </div>
     )}

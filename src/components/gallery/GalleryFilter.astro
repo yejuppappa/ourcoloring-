@@ -1,0 +1,128 @@
+---
+/**
+ * GalleryFilter — Difficulty toggle buttons + sort dropdown + total count
+ * Renders filter bar only. Pagination is separate (GalleryPagination).
+ */
+interface Props {
+  totalDrawings: number;
+  locale: "ko" | "en";
+  activeDifficulty: string;
+  activeSort: string;
+}
+
+const { totalDrawings, locale, activeDifficulty, activeSort } = Astro.props;
+
+const isKo = locale === "ko";
+
+const diffOptions = [
+  { value: "easy", label: isKo ? "쉬움 (4~6세)" : "Easy (4-6)", activeClass: "border-green-500 bg-green-500 text-white", inactiveClass: "border-[#E8DFD6] bg-white text-green-700 hover:border-green-400" },
+  { value: "medium", label: isKo ? "보통 (7~9세)" : "Medium (7-9)", activeClass: "border-yellow-500 bg-yellow-500 text-white", inactiveClass: "border-[#E8DFD6] bg-white text-yellow-700 hover:border-yellow-400" },
+  { value: "hard", label: isKo ? "어려움 (10세+)" : "Hard (10+)", activeClass: "border-red-500 bg-red-500 text-white", inactiveClass: "border-[#E8DFD6] bg-white text-red-700 hover:border-red-400" },
+];
+
+const sortOptions = [
+  { value: "newest", label: isKo ? "최신순" : "Newest" },
+  { value: "popular", label: isKo ? "인기순" : "Popular" },
+  { value: "name", label: isKo ? "이름순" : "Name" },
+];
+
+const activeDiffs = activeDifficulty ? activeDifficulty.split(",") : [];
+const isAll = activeDiffs.length === 0 || activeDiffs.length === 3;
+
+const countLabel = isKo ? `${totalDrawings}개 도안` : `${totalDrawings} pages`;
+
+const diffBtnData = diffOptions.map((opt) => {
+  const isActive = !isAll && activeDiffs.includes(opt.value);
+  return { ...opt, cls: isActive ? opt.activeClass : opt.inactiveClass };
+});
+---
+
+<div class="gallery-filter mb-6 space-y-3">
+  <div class="flex items-center justify-between">
+    <p class="text-sm font-medium text-[#3D3530]">{countLabel}</p>
+    <select
+      id="gf-sort"
+      class="rounded-lg border border-[#E8DFD6] bg-white px-3 py-1.5 text-sm text-[#3D3530] focus:border-[#FF6B4A] focus:outline-none"
+    >
+      {sortOptions.map((opt) => (
+        <option value={opt.value} selected={activeSort === opt.value}>
+          {opt.label}
+        </option>
+      ))}
+    </select>
+  </div>
+
+  <div class="flex flex-wrap items-center gap-2">
+    <button
+      data-diff="all"
+      class:list={[
+        "gf-diff-btn rounded-full px-3 py-1 text-xs font-medium border transition-all",
+        isAll
+          ? "border-[#FF6B4A] bg-[#FF6B4A] text-white"
+          : "border-[#E8DFD6] bg-white text-[#7A7067] hover:border-[#FF6B4A]",
+      ]}
+    >
+      {isKo ? "전체" : "All"}
+    </button>
+    {diffBtnData.map((opt) => (
+      <button
+        data-diff={opt.value}
+        class:list={["gf-diff-btn rounded-full px-3 py-1 text-xs font-medium border transition-all", opt.cls]}
+      >
+        {opt.label}
+      </button>
+    ))}
+  </div>
+</div>
+
+<script is:inline>
+(function() {
+  var params = new URL(window.location.href).searchParams;
+
+  function getActiveDiffs() {
+    var d = params.get('difficulty') || '';
+    return d ? d.split(',') : [];
+  }
+
+  function navigate(newParams) {
+    var u = new URL(window.location.href);
+    var keys = Object.keys(newParams);
+    for (var i = 0; i < keys.length; i++) {
+      var k = keys[i];
+      if (newParams[k]) u.searchParams.set(k, newParams[k]);
+      else u.searchParams.delete(k);
+    }
+    if (keys.indexOf('page') === -1) u.searchParams.delete('page');
+    window.location.href = u.toString();
+  }
+
+  var btns = document.querySelectorAll('.gf-diff-btn');
+  for (var i = 0; i < btns.length; i++) {
+    (function(btn) {
+      btn.addEventListener('click', function() {
+        var val = btn.getAttribute('data-diff');
+        if (val === 'all') {
+          navigate({ difficulty: '' });
+          return;
+        }
+        var active = getActiveDiffs();
+        var idx = active.indexOf(val);
+        if (idx >= 0) active.splice(idx, 1);
+        else active.push(val);
+        if (active.length === 0 || active.length === 3) {
+          navigate({ difficulty: '' });
+        } else {
+          navigate({ difficulty: active.join(',') });
+        }
+      });
+    })(btns[i]);
+  }
+
+  var sortEl = document.getElementById('gf-sort');
+  if (sortEl) {
+    sortEl.addEventListener('change', function() {
+      navigate({ sort: sortEl.value === 'newest' ? '' : sortEl.value });
+    });
+  }
+})();
+</script>
