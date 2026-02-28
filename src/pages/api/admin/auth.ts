@@ -27,7 +27,16 @@ export async function POST(context: APIContext): Promise<Response> {
   try {
     const { password } = (await context.request.json()) as { password: string };
 
-    if (!env.ADMIN_PASSWORD || password !== env.ADMIN_PASSWORD) {
+    const inputPw = (password || "").trim();
+    const storedPw = (env.ADMIN_PASSWORD || "").trim();
+
+    // Debug: log to Cloudflare Workers logs (not exposed to client)
+    console.log("[auth] ADMIN_PASSWORD defined:", !!env.ADMIN_PASSWORD);
+    console.log("[auth] ADMIN_PASSWORD length:", storedPw.length);
+    console.log("[auth] input length:", inputPw.length);
+    console.log("[auth] match:", inputPw === storedPw);
+
+    if (!storedPw || inputPw !== storedPw) {
       return new Response(JSON.stringify({ error: "Invalid password" }), {
         status: 401,
         headers: { "Content-Type": "application/json" },
